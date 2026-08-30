@@ -12,6 +12,8 @@
                                   Primary Init Functions
 ******************************************************************************************/
 
+#define DEBUGSYS false
+
 void FreeRTOS_Initalization() {
   #ifdef DEBUGSYS
     Serial.begin(115200); //Allow for Debug Reports to Serial Terminal----------/

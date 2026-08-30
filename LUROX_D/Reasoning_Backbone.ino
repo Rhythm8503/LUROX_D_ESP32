@@ -14,6 +14,7 @@ const int Traj_Points = 50;
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
 #define STEP_DELAY_MS  20   /* dwell per micro-step so servos physically settle */
+#define DEBUGSYS false
 
 /***************************************************************************************** 
                                 Trajectory Functions

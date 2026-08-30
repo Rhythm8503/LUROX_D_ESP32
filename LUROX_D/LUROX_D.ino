@@ -32,6 +32,7 @@ bool Wander = true;
 bool SleepState = false;
 bool manualMode = false;
 bool Anim_Break = false;
+#define DEBUGSYS false
 
 /***************************************************************************************** 
                              Primary Initalizations Functions
@@ -50,8 +51,7 @@ void setup() {
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
-    // Neutral_Position(); /* Start off at Neutral */
-    // HandCode();
+    
 }
 
 /***************************************************************************************** 
@@ -65,14 +65,14 @@ void loop() {
   Bluetooth_Handle(); //Read Commands from BLE Terminal
 
   /* Standy By Function (For Now) */
-  // if (((millis() - ResetTimer) > 15000) && Wander == true) {
-  //   ResetTimer = millis();
+  if (((millis() - ResetTimer) > 15000) && Wander == true) {
+    ResetTimer = millis();
 
-  //   #ifdef DEBUGSYS
-  //   Serial.println("===========================");
-  //   #endif
-  //   Standby();
-  // }
+    #ifdef DEBUGSYS
+    Serial.println("===========================");
+    #endif
+    Standby();
+  }
   
   /* Sleep Mode */
   if (Wander == false && SleepState == true) {

@@ -144,17 +144,17 @@ uint16_t FRSP = 500;  //Microsecond Pulse Width for Forearm Roll Steps
 /* Desired | Motor Moved | Encoder Actual | */
 
 uint8_t  WristPA[3] = {90, 90, 0 };   // Wrist Pitch
-uint16_t ElbowPA[3] = {135, 134, 0 };  // Elbow Pitch
-uint8_t  WristRA[3] = {135, 134, 0 };  // Wrist Roll 
-uint16_t ArmRA[3] =   {135, 134, 0 };  // Shoulder Roll
-uint16_t ArmPA[3] =   {135, 134, 0 };  // Shoulder Pitch
-uint16_t ArmYA[3] =   {135, 134, 0 };  // Shoulder Yaw
+uint16_t ElbowPA[3] = {135, 135, 0 };  // Elbow Pitch
+uint8_t  WristRA[3] = {135, 135, 0 };  // Wrist Roll 
+uint16_t ArmRA[3] =   {135, 135, 0 };  // Shoulder Roll
+uint16_t ArmPA[3] =   {135, 135, 0 };  // Shoulder Pitch
+uint16_t ArmYA[3] =   {135, 135, 0 };  // Shoulder Yaw
 
-uint8_t ThumbRA[2] =  {0, 0};       // Thumb 
+uint8_t ThumbRA[2] =  {180, 0};       // Thumb 
 uint8_t IndexRA[2] =  {0, 0};       // Index
 uint8_t MiddleRA[2] = {180, 0};       // Middle
 uint8_t RingRA[2] =   {180, 0};       // Ring
-uint8_t PinkyRA[2] =  {0, 180};       // Pinky
+uint8_t PinkyRA[2] =  {180, 0};       // Pinky
 
 /* 0 -> Handshake, 1 = Request, 2 = Intention, 3 = Objective, 4 = Specification, 5 = Position X, 6 = Position Y, 7 = Box Area, 8 = Object */
 uint8_t Gestures[3] = {0, 0, 0};  // 0 = Open, 1 = Close, 2 = Thumbs Up/Down, 3 = Peace, 4 = Middle, 5 = Point, 6 = Rock, 7 = Ok, 8 = Wave, 9 = Highfive

@@ -11,6 +11,7 @@
 /***************************************************************************************** 
                                   Arm Position Functions
 ******************************************************************************************/
+#define DEBUGSYS false
 
 void ARMYA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
@@ -100,7 +101,7 @@ void ARMPA_Mot(void* pvParameters) {
     }
     else {
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-      SHP.write(ArmPA[1]);
+      SHP.write(ArmPA[1] + ARMPA_Offset);
       xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -144,7 +145,7 @@ void ARMRA_Mot(void* pvParameters) {
 
     else {
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-      SHR.write(ArmRA[1]);
+      SHR.write(ArmRA[1] + ARMRA_Offset);
       xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -188,7 +189,7 @@ void ELPA_Mot(void* pvParameters) {
 
     else {
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-      EP.write(ElbowPA[1]);
+      EP.write(ElbowPA[1] + ELPA_Offset);
       xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -485,7 +486,7 @@ void Pinky_Mot(void* pvParameters) {
       //Serial.println("Pinky Active");
 
       HP.attach(PINKY, 500, 2500);
-      HP.write(90);
+      HP.write(PinkyRA[1]);
       vTaskDelay(pdMS_TO_TICKS(20)); /* 20ms equates to 1 50Hz bleep */
       HP.detach();
 

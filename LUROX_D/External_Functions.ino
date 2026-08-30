@@ -10,6 +10,8 @@
 /***************************************************************************************** 
                                   Basic Motor Functions
 ******************************************************************************************/
+#define DEBUGSYS false
+
 void Standby() {  // Wander
   #if DEBUGSYS
   Serial.println("Position Change");
@@ -329,9 +331,9 @@ int HandFunc(int TSPer, bool CF, byte SF) {  //Writing to Hand
   switch (SF) {
     case 0:
       if (CF == 1) {
-        ThumbRA[0] = 0;
-      } else {
         ThumbRA[0] = 180;
+      } else {
+        ThumbRA[0] = 0;
       }
       break;
 
