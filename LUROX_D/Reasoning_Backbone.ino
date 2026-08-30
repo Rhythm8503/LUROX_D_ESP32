@@ -15,24 +15,25 @@ const int Traj_Points = 50;
 #define MODE_SIDE_SWIPE 2
 #define STEP_DELAY_MS  20   /* dwell per micro-step so servos physically settle */
 
-/* ---- read the arm's current commanded angles into theta[4] ---- */
-void Get_Current_Angles(double theta[4]) {
+/***************************************************************************************** 
+                                Trajectory Functions
+******************************************************************************************/
+
+void Get_Current_Angles(double theta[4]) { // Grab Current Angles from Robotic Arm
     theta[0] = (double)ArmRA[1];
     theta[1] = (double)ArmPA[1];
     theta[2] = (double)ArmYA[1];
     theta[3] = (double)ElbowPA[1];
 }
 
-/* ---- command all four joints to a new pose (degrees) ---- */
-void Move_Arm_Pose(const double theta[4]) {
+void Move_Arm_Pose(const double theta[4]) { //Update Arm with New Angles
     ArmRA[0]   = (int)lround(theta[0]);
     ArmPA[0]   = (int)lround(theta[1]);
     ArmYA[0]   = (int)lround(theta[2]);
     ElbowPA[0] = (int)lround(theta[3]);
 }
 
-
-void Gen_Trajectory(const double p_start[3], const double p_target[3], int mode, double path[3][50]) {
+void Gen_Trajectory(const double p_start[3], const double p_target[3], int mode, double path[3][50]) { // Generates the Parametric Bezier Curve Points to Object
     /* --- 1. control point --- */
     double p_ctrl[3] = {0.0, 0.0, 0.0};
     p_ctrl[1] = p_start[1];                       /* lock Y axis */
@@ -64,7 +65,7 @@ void Gen_Trajectory(const double p_start[3], const double p_target[3], int mode,
     }
 }
 
-void Solve_Trajectory(const double theta_init[4], const double path[3][50], double theta_traj[4][50], double *avg_iters) {
+void Solve_Trajectory(const double theta_init[4], const double path[3][50], double theta_traj[4][50], double *avg_iters) { //Solves the Parametric Curve Points, so Point to Point Kinematics
     double seed[4];
     memcpy(seed, theta_init, sizeof(seed));
     long total_iters_unused = 0;  /* (iteration count not surfaced here) */
@@ -85,7 +86,7 @@ void Solve_Trajectory(const double theta_init[4], const double path[3][50], doub
     if (avg_iters) *avg_iters = sum_iters / (double)Traj_Points;
 }
 
-float Move_Trajectory(const double theta_init[4], const double path[3][50]) {
+float Move_Trajectory(const double theta_init[4], const double path[3][50]) { // Updates the Motor Angles from Point to Point
     double seed[4];
     memcpy(seed, theta_init, sizeof(seed));
 
@@ -109,7 +110,7 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50]) {
     return 1.0f;
 }
 
-float Run_Trajectory(const double p_target[3], int mode) {
+float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and Mode and the Arm will move.
     /* sanity: reject unreachable targets */
     double r = sqrt(p_target[0]*p_target[0] +
                     p_target[1]*p_target[1] +
@@ -132,3 +133,14 @@ float Run_Trajectory(const double p_target[3], int mode) {
     Move_Trajectory(theta_now, path);
     return 1.0f;
 }
+
+/***************************************************************************************** 
+                                Approach & Move Functions
+******************************************************************************************/
+
+
+
+
+
+
+

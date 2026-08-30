@@ -4,7 +4,8 @@ In this repository it contains the firmware for the ESP32-S3 and the MaixBit K21
 
 # Noteworthy Developments
 
-## K210
+## Maix Bit K210
+The K210 is a 64-bit Dual core RISC-V Processor, the Maix Bit has 8MB of ram, 2MB being dedicated to AI and another 6MB for both System and AI. 
 
 ### Compact TinyYoloV2 Algorithm with Approximate Nearest Neighbor for Lock on
 

@@ -61,42 +61,6 @@ void ARMYA_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
       //digitalWrite(SHY_EN, HIGH);
     }
-
-    // else if (abs(ArmYA[1] - ArmYA[2]) > 1) {
-    //   Serial.println("Shoulder Yaw Adjust");
-
-    //   SHY_Error = (ArmYA[1] - ArmYA[2]);  //AS5600 Angle Reading vs Desired -> Similar to ArmYA[0] - ArmYA[1] However now closed loop.
-    //   //SHY_eDot = ((SHY_Error - SHY_prevError) / SHY_deltaTime);
-    //   //SHY_EInt += (SHY_Error * SHY_deltaTime);
-
-    //   KSUM_SHY = (Kp * SHY_Error) + (Ki * SHY_EInt) + (Kd * SHY_eDot); /* Wow PID! */
-    //   SHY_prevError = SHY_Error;
-
-    //   bool SDir = (KSUM_SHY >= 0);  // 1 for positive, 0 for negative;
-    //   digitalWrite(SHY_DIR, SDir);
-
-    //   /* Include function to convert angles to step, 400 steps = 360 */
-    //   uint32_t SHY_steps = (round(abs(KSUM_SHY) / 0.9) ) * 16; /* Inside 16:1 Gearbox */
-
-    //   // Enable Motor
-    //   if (KSUM_SHY > 1) {
-
-    //   xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-    //   digitalWrite(SHY_EN, LOW);
-    //   vTaskDelay(pdMS_TO_TICKS(5));
-
-    //   for (int St = 0; St >= SHY_steps; St++) {
-    //     digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-    //     delayMicroseconds(500);        // Adjust for motor speed
-    //     digitalWrite(SHY_STEP, LOW);
-    //     delayMicroseconds(500);
-    //   }
-
-    //   xSemaphoreGive(motorSemaphore);
-    //   vTaskDelay(pdMS_TO_TICKS(200));
-    //   //digitalWrite(SHY_EN, HIGH);
-    //   }
-    // }
   }
 }
 
@@ -321,41 +285,6 @@ void WRRA_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
       //digitalWrite(FR_EN, HIGH);
     }
-
-    // else if (abs(WristRA[1] - WristRA[2]) > 1) {
-    //   Serial.println("Wrist Roll Adjust!");
-
-    //   FR_Error = (WristRA[1] - WristRA[2]);  //AS5600 Angle Reading vs Desired -> Similar to ArmYA[0] - ArmYA[1] However now closed loop.
-    //   FR_eDot = ((FR_Error - FR_prevError) / FR_deltaTime);
-    //   FR_EInt += (FR_Error * FR_deltaTime);
-
-    //   KSUM_FR = (Kp * FR_Error) + (Ki * FR_EInt) + (Kd * FR_eDot); /* Wow PID! */
-    //   FR_prevError = FR_Error;
-
-    //   bool FDir = (KSUM_FR >= 0);        // Call Direction
-    //   digitalWrite(FR_DIR, FDir);
-
-    //   /* Include function to convert angles to step, 400 steps = 360 */
-    //   uint32_t FR_Steps = round(abs(KSUM_FR) / 0.9) * 3.7;
-
-    //   if (KSUM_FR > 1) {
-
-    //   xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-    //   digitalWrite(FR_EN, LOW);
-    //   vTaskDelay(pdMS_TO_TICKS(5));
-
-    //   for (int St = 0; St >= FR_Steps; St++) {
-    //     digitalWrite(FR_STEP, HIGH);  // Assumes Sstep2pin is defined
-    //     delayMicroseconds(500);       // Adjust for motor speed
-    //     digitalWrite(FR_STEP, LOW);
-    //     delayMicroseconds(500);
-    //   }
-
-    //   xSemaphoreGive(motorSemaphore);
-    //   vTaskDelay(pdMS_TO_TICKS(200));
-    //   //digitalWrite(FR_EN, HIGH);      
-    //   }
-    // }
   }
 }
 

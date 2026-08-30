@@ -26,5 +26,17 @@ float UpperArmSensor() { //P1 Vector
   return static_cast<float>(FR_Pos) * (360.0 / 4096.0);
 }
 
+void Object_Grasp() {
+  if (Obj_Dist < 75 && Grab == true) {
+    Gestures[0] = 1; // Close Hand
+    HandCode(); // Push Update to Hand
+  }
+
+  else {
+    Gestures[0] = 0; //Open Hand
+    HandCode(); // Push Update to Hand
+  }
+}
+
 
 

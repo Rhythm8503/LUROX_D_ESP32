@@ -24,6 +24,7 @@ bool Grab = false;
 bool Wander = true;
 bool SleepState = false;
 bool manualMode = false;
+bool Anim_Break = false;
 
 /***************************************************************************************** 
                              Primary Initalizations Functions
@@ -31,15 +32,18 @@ bool manualMode = false;
 
 void setup() {
     /* Initalization for LUROX D */
+    #ifdef DEBUGSYS
     Serial.begin(115200);
+    #endif 
+
     Library_Initalization(); /* Primary Libraries, Sensors and etc */
-    UART_Bootcheck();        /* Test UARY connection to K210 */
     Motor_Initalization();   /* Initialize all Servo Motors */
     Stepper_Home();          /* Home Stepper Motors */
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
+    Neutral_Position(); /* Start off at Neutral */
 }
 
 /***************************************************************************************** 
@@ -55,13 +59,20 @@ void loop() {
   /* Standy By Function (For Now) */
   if (((millis() - ResetTimer) > 15000) && Wander == true) {
     ResetTimer = millis();
+
+    #ifdef DEBUGSYS
     Serial.println("===========================");
+    #endif
+
     Standby();
   }
   
   /* Sleep Mode */
   if (Wander == false && SleepState == true) {
+    Neutral_Position();
     Sleep();    // Power Saving
   }
+
+  
 }
 

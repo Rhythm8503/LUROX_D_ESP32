@@ -242,3 +242,9 @@ enum Context {
 // State variables
 Context currentContext = MAIN;
 
+/***************************************************************************************** 
+                                   Key Point Definitions
+******************************************************************************************/
+
+const int16_t Arm_Home[3] = {-150, 300, -100}; /* General Home Position */
+const int16_t Arm_Extended[3] = {0, 300, -325}; /* Arm Extended out */

@@ -271,8 +271,3 @@ void Stepper_Home() {
 
   digitalWrite(FR_EN, HIGH);  /* Disable FR Motor */
 }
-
-void UART_Bootcheck() {
-  /* Send Boot command and confirm function */
-  /* If fail do Dial Up method and restate connection */
-}

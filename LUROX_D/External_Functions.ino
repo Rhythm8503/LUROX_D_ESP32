@@ -8,10 +8,13 @@
 
 */
 /***************************************************************************************** 
-                                  Decision Functions
+                                  Basic Motor Functions
 ******************************************************************************************/
 void Standby() {  // Wander
+  #if DEBUGSYS
   Serial.println("Position Change");
+  #endif
+
   ArmPA[0] = random(130, 145);    //Shoulder Pitch
   ArmRA[0] = random(127, 133);    //Shoulder Roll
   ArmYA[0] = random(80, 100);     //Shoulder Yaw
@@ -21,15 +24,11 @@ void Standby() {  // Wander
 }
 
 void Sleep() {  // Place Arm to Sleep
+  #if DEBUGSYS
   Serial.println("Sleep Mode Activated");
-  // Rotate back to home
-  ArmPA[0] = 135;    //Shoulder Pitch
-  ArmRA[0] = 135;    //Shoulder Roll
-  ArmYA[0] = 90;     //Shoulder Roll
-  ElbowPA[0] = 135;  //Elbow Pitch
-  WristPA[0] = 90;   //Wrist Pitch
-  WristRA[0] = 90;   //Wrist Roll
+  #endif
 
+  // Rotate back to home
   digitalWrite(SHY_EN, HIGH);  //Shoulder Yaw Sleep
   digitalWrite(FR_EN, HIGH);   //Forearm Roll Sleep
 
@@ -40,22 +39,123 @@ void Sleep() {  // Place Arm to Sleep
   FP.detach();
 }
 
-void Search_Position() {
-  ArmYA[0] = 135; /* Lock Rotation */
+void Search_Position() { // Hunting for Object
+  #if DEBUGSYS
+  Serial.println("Searching for Object!");
+  #endif
+  WristPA[0] = 110; /* Locked rotation */
+
+  /* Randomly moving positions to try finding */
+  WristRA[0] = random(110, 150);
+  ArmYA[0] = random(110, 150); 
   ArmPA[0] = random(170, 175);
   ArmYA[0] = random(120, 150);
   ElbowPA[0] = random(210, 220);
 }
 
 void Wake() {  // Initalizing Objects
-
+  #if DEBUGSYS
   Serial.println("Waking Arm Up!");
+  #endif
+
   //Servo Wake
   FP.attach(WRIST, 500, 2500);
   EP.attach(ELBOW, 500, 2500);
   SHR.attach(SHR_RO, 500, 2500);
   SHP.attach(SHR_PI, 500, 2500);
+}
 
+void Extended_Position() { /* Extended out on the XYZ Plane */
+  #if DEBUGSYS
+  Serial.println("Extending the Arm out!");
+  #endif
+
+  ArmRA[0] = 135;
+  ArmPA[0] = 150;
+  ArmYA[0] = 135;
+  ElbowPA[0] = 205;
+  WristRA[0] = 135;
+  WristPA[0] = 90;
+  Gestures[0] = 0; // Open the Hand
+  HandCode();
+}
+
+void Neutral_Position() { /* Straight Down position */
+  #if DEBUGSYS
+  Serial.println("Returning Arm Back to Home!");
+  #endif
+
+  ArmRA[0] = 135;
+  ArmPA[0] = 135;
+  ArmYA[0] = 135;
+  ElbowPA[0] = 135;
+  WristRA[0] = 135;
+  WristPA[0] = 90;
+  Gestures[0] = 0; // Open the Hand
+  HandCode();
+}
+
+void Wave_Movement() { // Pre-Defined Wave Animation
+  /* Bring to Extended Position */
+  Extended_Position();
+  #if DEBUGSYS
+  Serial.println("Beginning Wave Animation!");
+  #endif
+
+  WristRA[0] = 30;
+  WristPA[0] = 110;
+
+  /* Wave Animation */
+  for (int Wave = 0; Wave < 3; Wave++) {
+    ArmYA[0] = 105;
+    vTaskDelay(pdMS_TO_TICKS(500));
+    ArmYA[0] = 165;
+    vTaskDelay(pdMS_TO_TICKS(500));
+    if (Anim_Break == true) {
+      break;
+    }
+  }
+  ArmYA[0] = 135;
+  vTaskDelay(pdMS_TO_TICKS(500));
+  Neutral_Position();
+}
+
+void Handshake() {  // Pre-Defined Handshake
+  Extended_Position(); /* Extended Position */
+  WristRA[0] = 45; /* 90 Degrees for the Handshake */ 
+  #if DEBUGSYS
+  Serial.println("Beginning Handshake!");
+  #endif 
+
+  uint8_t Anim_Timer = millis(); /* Time out counter */
+
+  while((Anim_Timer > millis() - 15000)) { /* It will wait 15 seconds before timing out */
+    if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
+      break;
+    }
+
+    if (Obj_Dist < 50) { /* Someone places their hand or object infront of the hand */
+      Gestures[0] = 1; // Close the Hand
+      HandCode(); //Push the Change
+      for (int Anim_Count = 0; Anim_Count < 2; Anim_Count++) {
+        if (Obj_Dist > 150 || Anim_Break == true) {
+          Extended_Position();
+          WristRA[0] = 45; /* 90 Degrees for the Handshake */ 
+          break;
+        }
+        ElbowPA[0] = 220; /* Shake the Person's Hand */
+        vTaskDelay(pdMS_TO_TICKS(200));
+        ElbowPA[0] = 180;
+        vTaskDelay(pdMS_TO_TICKS(200));
+      }
+
+      /* Return the hand back to open */
+      Gestures[0] = 0;
+      HandCode();
+      Neutral_Position();
+    }
+
+  }
 }
 
 
