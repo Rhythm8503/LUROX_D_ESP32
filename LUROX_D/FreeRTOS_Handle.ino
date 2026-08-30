@@ -71,7 +71,7 @@ void ARMPA_Mot(void* pvParameters) {
   Serial.println("Arm Pitch Task Handle Opened");
   #endif
 
-  int ARMPA_Offset = -13;
+  int ARMPA_Offset = -15; /* 120 is the actual value for neutral */
 
   while (1) {
     if (ArmPA[0] != ArmPA[1]) {  // Shoulder Pitch
@@ -88,7 +88,7 @@ void ARMPA_Mot(void* pvParameters) {
         SHP.write(ArmPA[0] + ARMPA_Offset);
 
         int ArmPA_Dist = abs(ArmPA[1] - ArmPA[0]);
-        int APA_DelayMs = map(ArmPA_Dist, 1, 180, 50, 5); // 50ms delay near target, 5ms far away
+        int APA_DelayMs = map(ArmPA_Dist, 1, 270, 25, 1); // 50ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(APA_DelayMs)); // Non-blocking RTOS delay
       }
@@ -98,7 +98,6 @@ void ARMPA_Mot(void* pvParameters) {
       xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(50));
     }
-
     else {
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
       SHP.write(ArmPA[1]);
@@ -115,7 +114,7 @@ void ARMRA_Mot(void* pvParameters) {
   Serial.println("Arm Roll Task Handle Opened");
   #endif
 
-  int ARMRA_Offset = 2;
+  int ARMRA_Offset = 15; /* 135 needs + 15 to make 150 */
 
   while (1) {
     if (ArmRA[0] != ArmRA[1]) {  // Shoulder Roll
@@ -132,7 +131,7 @@ void ARMRA_Mot(void* pvParameters) {
         SHR.write(ArmRA[0] + ARMRA_Offset);
 
         int ArmRA_dist = abs(ArmRA[1] - ArmRA[0]);
-        int ARA_DelayMs = map(ArmRA_dist, 1, 180, 50, 5); // 50ms delay near target, 5ms far away
+        int ARA_DelayMs = map(ArmRA_dist, 1, 180, 25, 1); // 50ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(ARA_DelayMs)); // Non-blocking RTOS delay
       }
@@ -159,7 +158,7 @@ void ELPA_Mot(void* pvParameters) {
   Serial.println("Elbow Pitch Task Handle Opened");
   #endif
 
-  int ELPA_Offset = 2;
+  int ELPA_Offset = 3; /* Angle 138 is the true neutral */
 
   while (1) {
     if (ElbowPA[0] != ElbowPA[1]) {  // Elbow Pitch
@@ -176,7 +175,7 @@ void ELPA_Mot(void* pvParameters) {
         EP.write(ElbowPA[0] + ELPA_Offset);
 
         int ELP_Dist = abs(ElbowPA[1] - ElbowPA[0]);
-        int ELP_DelayMs = map(ELP_Dist, 1, 270, 50, 5); // 100ms delay near target, 5ms far away
+        int ELP_DelayMs = map(ELP_Dist, 1, 270, 25, 1); // 100ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(ELP_DelayMs)); // Non-blocking RTOS delay
         }
@@ -203,6 +202,8 @@ void WRPA_Mot(void* pvParameters) {
   Serial.println("Wrist Pitch Task Handle Opened");
   #endif
 
+  int WristPA_Offset = 10;
+
   while (1) {
     if (WristPA[0] != WristPA[1]) {  // Wrist Pitch
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
@@ -218,7 +219,7 @@ void WRPA_Mot(void* pvParameters) {
         FP.write(WristPA[0]);
 
         int WristPA_Dist = abs(WristPA[1] - WristPA[0]);
-        int WPA_DelayMs = map(WristPA_Dist, 1, 180, 50, 5); // 50ms delay near target, 5ms far away
+        int WPA_DelayMs = map(WristPA_Dist, 1, 180, 25, 1); // 50ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(WPA_DelayMs)); // Non-blocking RTOS delay
       }

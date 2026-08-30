@@ -11,11 +11,18 @@
 /***************************************************************************************** 
                                 LUROX D Global Definitions
 ******************************************************************************************/
+
 /* Timers */
 unsigned long GlobalTimer = 0;
 unsigned long startTime = 0;
 unsigned long ResetTimer = 0;
 unsigned long StepperTimer = 0;
+
+/* Decision Backbone Functions */
+bool CMD_IN = false;
+bool ObjFound = false;
+bool HandTrack = false;
+uint8_t request, intent, objective, specification;
 
 /* Global Function Flags */
 bool HandRot = false;
@@ -43,7 +50,8 @@ void setup() {
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
-    Neutral_Position(); /* Start off at Neutral */
+    // Neutral_Position(); /* Start off at Neutral */
+    // HandCode();
 }
 
 /***************************************************************************************** 
@@ -57,15 +65,14 @@ void loop() {
   Bluetooth_Handle(); //Read Commands from BLE Terminal
 
   /* Standy By Function (For Now) */
-  if (((millis() - ResetTimer) > 15000) && Wander == true) {
-    ResetTimer = millis();
+  // if (((millis() - ResetTimer) > 15000) && Wander == true) {
+  //   ResetTimer = millis();
 
-    #ifdef DEBUGSYS
-    Serial.println("===========================");
-    #endif
-
-    Standby();
-  }
+  //   #ifdef DEBUGSYS
+  //   Serial.println("===========================");
+  //   #endif
+  //   Standby();
+  // }
   
   /* Sleep Mode */
   if (Wander == false && SleepState == true) {
@@ -77,7 +84,7 @@ void loop() {
   // if (CMD_IN == true) {
   //   Wander = false; // Disable Wandering
   //   Extended_Position(); //Return to Standby-State
-  //   Decision_Backbone(request, intention, specification, objective); /* Actions will be governed */
+  //   Decision_Backbone(request, intent, specification, objective); /* Actions will be governed */
   // }
 
 }

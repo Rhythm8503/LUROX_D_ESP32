@@ -270,8 +270,6 @@ void Gesture_Function(int req_ges, int int_ges) {
 }
 
 void Action_Function(int spec_action, int obj_action) {
-
-
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
     int Search_timeout = 0;
@@ -320,9 +318,9 @@ void Action_Function(int spec_action, int obj_action) {
     Grab = true; 
 
     double Obj_Pos[3] = {0, 0, 0};
-    double Pos_Angles[4] = { ArmRA[1], ArmPA[1], ArmYA[1], ElbowPA[1] }; /* Grab the Values from Variables */
+    double Pos_Angles[4] = {ArmRA[1], ArmPA[1], ArmYA[1], ElbowPA[1]}; /* Grab the Values from Variables */
 
-    Object_Position(Pos_Angles, WristRA[1], WristPA[1], &Obj_Pos);
+    Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
   }
 }

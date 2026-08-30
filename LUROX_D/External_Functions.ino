@@ -15,12 +15,12 @@ void Standby() {  // Wander
   Serial.println("Position Change");
   #endif
 
-  ArmPA[0] = random(130, 145);    //Shoulder Pitch
+  ArmPA[0] = random(135, 155);    //Shoulder Pitch
   ArmRA[0] = random(127, 133);    //Shoulder Roll
-  ArmYA[0] = random(80, 100);     //Shoulder Yaw
-  ElbowPA[0] = random(135, 150);  //Elbow Pitch
+  ArmYA[0] = random(105, 165);     //Shoulder Yaw
+  ElbowPA[0] = random(150, 200);  //Elbow Pitch
   WristPA[0] = random(90, 110);   //Wrist Pitch
-  WristRA[0] = random(80, 100);   //Wrist Roll
+  WristRA[0] = random(105, 165);   //Wrist Roll
 }
 
 void Sleep() {  // Place Arm to Sleep
@@ -337,9 +337,9 @@ int HandFunc(int TSPer, bool CF, byte SF) {  //Writing to Hand
 
     case 1:
       if (CF == 1) {
-        IndexRA[0] = 0;
-      } else {
         IndexRA[0] = 180;
+      } else {
+        IndexRA[0] = 0;
       }
       break;
 
