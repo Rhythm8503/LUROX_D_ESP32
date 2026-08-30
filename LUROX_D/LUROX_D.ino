@@ -1,7 +1,7 @@
 /* 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2025
+                          L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
@@ -73,6 +73,12 @@ void loop() {
     Sleep();    // Power Saving
   }
 
-  
+  /* This loop wil primarily focus on the control loop reading information and kinematics instruction to grab objects */
+  // if (CMD_IN == true) {
+  //   Wander = false; // Disable Wandering
+  //   Extended_Position(); //Return to Standby-State
+  //   Decision_Backbone(request, intention, specification, objective); /* Actions will be governed */
+  // }
+
 }
 

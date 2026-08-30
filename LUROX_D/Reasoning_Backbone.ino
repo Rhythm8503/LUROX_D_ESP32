@@ -1,7 +1,7 @@
 /* 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2025
+                          L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
@@ -135,9 +135,135 @@ float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and
 }
 
 /***************************************************************************************** 
-                                Approach & Move Functions
+                                      Decision Mapping
 ******************************************************************************************/
 
+/* Look Up Table: [Layer][Group] -> Next Node */
+const Node transition_lut[5][4] = {
+  /* Layer 1 = Request */       {INTENTION, SPECIFICATION_RESTRICTED, GESTURE, HALT},
+  /* Layer 2 = Intention */     {SPECIFICATION, ACTION, GESTURE, HALT},
+  /* Layer 3 = Specification */ {COLOR, OBJECTIVE, ACTION, HALT},
+  /* Layer 4 = Objective */     {ACTION, HALT, NOTHING, NOTHING},
+  /* Layer 3 = Restricted */    {HALT, OBJECTIVE, ACTION, HALT}
+};
+
+const int* const node_input_maps[] ={
+  Request_Map,
+  Intention_Map,
+  Specification_Map, 
+  Objective_Map,
+  Specification_Restricted_Map
+};
+
+void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_input) {
+    Node current_node = REQUEST;
+
+    while (current_node <= SPECIFICATION_RESTRICTED) { /* Only Layers 1 - 5 will be processed */
+      int raw_val;
+        switch (current_node) {
+            case REQUEST:              raw_val = req_input; break;
+            case INTENTION:            raw_val = int_input; break;
+            case SPECIFICATION:        raw_val = spec_input; break;
+            case SPECIFICATION_RESTRICTED: raw_val = spec_input; break;
+            case OBJECTIVE:            raw_val = obj_input; break;
+            default:                   raw_val = 0;
+        }
+        
+        // Safety: ensure input doesn't exceed the specific layer's array size
+        if (raw_val < 0 || raw_val > node_input_max[current_node]) {
+            current_node = HALT; 
+            break;
+        }
+
+        // Dynamically pull the correct map and get the group
+        int group = node_input_maps[current_node][raw_val];
+        // Move to next node
+        current_node = transition_lut[current_node][group];
+    }
+
+    switch (current_node) {
+        case HALT:   Halt_Function(); break;
+        case GESTURE: Gesture_Function(req_input, int_input); break;
+        case ACTION: Action_Function(spec_input, obj_input); break;
+        default: break;
+    }
+}
+
+
+void Halt_Function() {
+  #ifdef DEBUGSYS
+  Serial.println("Halting Actions!");
+  #endif
+  /* Move to Pose Position */
+  Extended_Position();
+}
+
+void Gesture_Function(int req_ges, int int_ges) {
+  #ifdef DEBUGSYS
+  Serial.println("Displaying Gesture on Hand!");
+  #endif
+  /* Move to Pose Position */
+  Extended_Position();
+  
+  /* Input to Action */
+}
+
+void Action_Function(int spec_action, int obj_action) {
+
+
+
+
+  /* Inital Stage Object Search */
+  if (ObjFound == false && HandTrack == false) {
+    int Search_timeout = 0;
+    for (Search_timeout < 60; Search_timeout++;) {
+      Search_Position(); /* Randomly Move to find object */
+      vTaskDelay(pdMS_TO_TICKS(1000));
+      if (ObjFound == true) {
+        break;
+      }
+    }
+
+    if (Search_timeout >= 60) {
+      Search_timeout = 0;
+      CMD_IN = false;
+
+      #ifdef DEBUGSYS
+      Serial.println("Object not found, search timed out!");
+      #endif
+    }
+  }
+
+  if (ObjFound == true && HandTrack == false) {
+    int HandInv_Timeout = 0;
+    while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Until the function centers the object, it will run */
+      HandInv_Timeout++;
+      if (HandInv_Timeout > 1000) {
+        ObjFound = false;
+        CMD_IN = false;
+
+        #ifdef DEBUGSYS
+        Serial.println("Timeout Alignment, Cannot grab!");
+        #endif
+
+        break;
+      }
+    }
+    if (Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
+      HandTrack = true;
+    }
+  }
+
+  if (ObjFound == true && HandTrack == true) {
+    #ifdef DEBUGSYS
+      Serial.println("Grabbing Object!");
+    #endif
+    Grab = true; 
+
+  }
+  
+
+}
 
 
 

@@ -1,7 +1,7 @@
 /* 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2025
+                          L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
@@ -159,10 +159,14 @@ uint8_t PinkyRA[2] =  {0, 0};       // Pinky
 /* 0 -> Handshake, 1 = Request, 2 = Intention, 3 = Objective, 4 = Specification, 5 = Position X, 6 = Position Y, 7 = Box Area, 8 = Object */
 uint8_t Gestures[3] = {0, 0, 0};  // 0 = Open, 1 = Close, 2 = Thumbs Up/Down, 3 = Peace, 4 = Middle, 5 = Point, 6 = Rock, 7 = Ok, 8 = Wave, 9 = Highfive
 
+/* ################################################################################################ */
+
 /* Positioning and Inverse Kinematics */
 double CameraL[3] = {0, 0, 0};  /* Desired XYZ from Inverse Kinematics */
 double CurrentL[3] = {0, 0, 0}; /* Current XYZ from Forward Kinematics */
 int16_t Obj_Dist = 500;
+
+/* ################################################################################################ */
 
 /* General Modes: 0 = Standard, 1 = Convention Cosplay, 2 = Party Cosplay */
 uint8_t GeneralMode;
@@ -176,7 +180,28 @@ uint8_t request, intent, objective, specification;
 uint8_t objX, objY, objW, objH; // Object XY and Box Size used to determine Desired Position
 char commandBuffer[32];         // Buffer for command parsing
 char originalCommand[32];       // Buffer to store original command for echo
-uint8_t selectedLimb = 0;       
+uint8_t selectedLimb = 0;      
+
+/* ################################################################################################ */
+
+/* Decision Backbone */
+
+/* Decision Maps */
+const int Request_Map[13] = {0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 3, 3};
+const int Intention_Map[14] = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
+const int Specification_Map[23] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
+const int Objective_Map[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1};
+const int Specification_Restricted_Map[23] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
+
+const int node_input_max[] = {
+  12, /* Max Input for Request */
+  13, /* Max Input for Intention */
+  22, /* Max Input for Specification */
+  12, /* Max Input for Objective */
+  22  /* Max Input for Specification, Restricted */
+};
+
+/* ################################################################################################ */
 
 /* AS5600 Magnetic PID Controller */
 const double Kp = 1.3;
@@ -203,6 +228,8 @@ float FR_prevTime = 0;
 float SHY_currentTime = 0;
 float SHY_deltaTime = 0;
 float SHY_prevTime = 0;
+
+/* ################################################################################################ */
 
 /* AS5600 Angle System */
 const float COUNTS_PER_DEGREE = 4096.0 / 360.0;
@@ -242,9 +269,25 @@ enum Context {
 // State variables
 Context currentContext = MAIN;
 
+/* Defining the Layers & Blocks in Decision Map */
+typedef enum {
+  REQUEST = 0,
+  INTENTION = 1,
+  SPECIFICATION = 2,
+  OBJECTIVE = 3,
+  SPECIFICATION_RESTRICTED = 4,
+  GESTURE = 5,
+  ACTION = 6,
+  COLOR = 7,
+  NOTHING = 8,
+  HALT = 9,
+} Node;
+
+
 /***************************************************************************************** 
                                    Key Point Definitions
 ******************************************************************************************/
 
 const int16_t Arm_Home[3] = {-150, 300, -100}; /* General Home Position */
 const int16_t Arm_Extended[3] = {0, 300, -325}; /* Arm Extended out */
+

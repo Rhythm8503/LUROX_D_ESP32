@@ -1,7 +1,7 @@
 /* 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2025
+                          L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
@@ -236,7 +236,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, floa
     *magnitude = Obj_Dist; // Retrieve Distance from IR Sensor
 }
 
-int32_t Hand_CenterCam(float CamX, float CamY, float A5, float A6, int* A5N, int* A6N) {
+int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* A5N, uint8_t* A6N) {
   // Iteration Method of Inverse Kinematics
   if (!A5N || !A6N) return 1;
 
@@ -254,8 +254,8 @@ int32_t Hand_CenterCam(float CamX, float CamY, float A5, float A6, int* A5N, int
 
 
   if (CamX < 0 || CamY < 0 || isnan(CamX) || isnan(CamY)) {
-    *A5N = (int)round(A5); // Retain current joint angle
-    *A6N = (int)round(A6); // Retain current joint angle
+    *A5N = round(A5); // Retain current joint angle
+    *A6N = round(A6); // Retain current joint angle
     return -1;  // Target lost, holding position
   }
 
@@ -268,8 +268,8 @@ int32_t Hand_CenterCam(float CamX, float CamY, float A5, float A6, int* A5N, int
 
   /* Camera generally centered = Stop moving and hold */
   if (Cam_DistR < DEADZONE) {
-    *A5N = (int)round(A5);
-    *A6N = (int)round(A6);
+    *A5N = round(A5);
+    *A6N = round(A6);
     return 1; /* Locked onto Target */
   }
 
