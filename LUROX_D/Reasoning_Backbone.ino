@@ -8,7 +8,7 @@
 
 */
 
-const double   Max_Reach     = 550.0;     /* mm  */
+const double Max_Reach = 550.0;     /* mm  */
 const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
@@ -206,11 +206,70 @@ void Gesture_Function(int req_ges, int int_ges) {
   Extended_Position();
   
   /* Input to Action */
+  if (req_ges >= 6 && req_ges <= 10) {
+    switch(req_ges) {
+      case 6: Wave_Movement(); break; /* Wave Function */
+      case 7: Handshake(); break; /* Run Handshake Animation */
+      case 8: /* Thumbs Up */
+        Extended_Position();
+        Gestures[0] = 2;
+        WristPA[0] = 30;
+        break;
+      case 9: /* Thumbs Down */
+        Extended_Position();
+        Gestures[0] = 2;
+        WristPA[0] = 240;
+        break;
+      case 10: HighFive(); break;
+    }
+  }
+
+  if (int_ges >= 4 && int_ges <= 10) {
+    switch(int_ges) {
+      case 4: Wave_Movement(); break;
+      case 5: Handshake(); break;
+
+      case 6: /* Thumbs Up */
+        Extended_Position();
+        Gestures[0] = 2;
+        HandCode();
+        WristRA[0] = 30;
+        break;
+
+      case 7: /* Thumbs Down */
+        Extended_Position();
+        Gestures[0] = 2;
+        HandCode();
+        WristRA[0] = 240;
+        break;
+
+      case 8: HighFive(); break;
+
+      case 9: /* Point Function */
+        Extended_Position();
+        Gestures[0] = 2;
+        HandCode();
+        WristPA[0] = 30;
+        break;
+
+      case 10: /* Peace Function */
+        Extended_Position();
+        Gestures[0] = 3;
+        HandCode();
+        WristPA[0] = 110;
+        break;
+
+      case 11:  /* Ok! Function */
+        Extended_Position();
+        Gestures[0] = 7;
+        HandCode();
+        WristRA[0] = 30;
+    }
+  }
+  
 }
 
 void Action_Function(int spec_action, int obj_action) {
-
-
 
 
   /* Inital Stage Object Search */
@@ -260,9 +319,12 @@ void Action_Function(int spec_action, int obj_action) {
     #endif
     Grab = true; 
 
-  }
-  
+    double Obj_Pos[3] = {0, 0, 0};
+    double Pos_Angles[4] = { ArmRA[1], ArmPA[1], ArmYA[1], ElbowPA[1] }; /* Grab the Values from Variables */
 
+    Object_Position(Pos_Angles, WristRA[1], WristPA[1], &Obj_Pos);
+    Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
+  }
 }
 
 

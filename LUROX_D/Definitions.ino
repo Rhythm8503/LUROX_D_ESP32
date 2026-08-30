@@ -184,14 +184,33 @@ uint8_t selectedLimb = 0;
 
 /* ################################################################################################ */
 
-/* Decision Backbone */
-
 /* Decision Maps */
 const int Request_Map[13] = {0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 3, 3};
 const int Intention_Map[14] = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
 const int Specification_Map[23] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
 const int Objective_Map[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1};
 const int Specification_Restricted_Map[23] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
+
+/* ################## MAPPING ####################### 
+
+Request -> 0 - 3 = Request {Can [0], Would[1], Could[2], Please[3]}
+Request -> 4 - 5 = Direct Command {Grab[4], Hold[5]}
+Request -> 6 - 10 = Gestures {Wave[6], Handshake[7], ThumbsUp[8], ThumbsDown[9], High-Five[10]}
+Request -> 11 - 12 = Interrupt/HALT {Stop[11], Cancel[12]}
+
+Intention -> 0 - 3 = Command (Grab[0], Hold[1], Push[2], Pull[3])
+Intention -> 4 - 11 = Gestures {Wave[4], Handshake[5], Thumbs Up[6], Thumbs Down[7], High-Five[8], Point[9], Peace[10], Ok! [11]}
+Intention -> 12 - 13 =  Interrupt / HALT {Stop[12], Cancel[13]}
+
+Specification -> 0 - 9 = Colors (Red[0], Orange[1], Yellow[2], Green[3], Blue[4], Purple[5], White[6], Black[7], Brown[8], Grey[9])
+Specification -> 10 - 20 = Objective (Wallet[10], Pliers[11], Wrench[12], Cup[13], Phone[14], Screwdrivers[15], Scissors[16], Drill[17], Hammer[18], Can[19], Bottle[20])
+Specification -> 21 - 22 = Interrupt (Stop[21], Cancel[22])
+
+Objective -> 0 - 10 = Objective (Wallet[0], Pliers[1], Wrench[2], Cup[3], Phone[4], Screwdrivers[5], Scissors[6], Drill[7], Hammer[8], Can[9], Bottle[10])
+Objective -> 11 - 12 = Interrupt (Stop[11], Cancel[12])
+
+################## MAPPING #######################  */
+
 
 const int node_input_max[] = {
   12, /* Max Input for Request */

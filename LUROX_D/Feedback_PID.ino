@@ -22,8 +22,8 @@ float HandSensor() { //P2 Vector
 
 float UpperArmSensor() { //P1 Vector
   //Read Stepper Motor Position/Revolutions
-  SHY_Pos = SHYAS.getCumulativePosition();
-  return static_cast<float>(FR_Pos) * (360.0 / 4096.0);
+  SHY_Pos = SHYAS.getCumulativePosition(); /* Shoulder Position Sensor */
+  return static_cast<float>(SHY_Pos) * (360.0 / 4096.0);
 }
 
 void Object_Grasp() {

@@ -293,7 +293,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   return 0; /* Actively Tracking for Object */
 }
 
-void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {
+void Object_Position(double theta_deg[4], float A5, float A6, double* global_obj_pos[3]) {
     double wrist_pos[3];
     double R_arm[3][3];
     float hand_local[3];
@@ -312,8 +312,8 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     rotated_hand_vec[2] = R_arm[2][0]*hand_local[0] + R_arm[2][1]*hand_local[1] + R_arm[2][2]*hand_local[2];
 
     // 4. Translate: Add rotated hand vector to the global wrist position
-    global_obj_pos[0] = wrist_pos[0] + rotated_hand_vec[0];
-    global_obj_pos[1] = wrist_pos[1] + rotated_hand_vec[1];
-    global_obj_pos[2] = wrist_pos[2] + rotated_hand_vec[2];
+    *global_obj_pos[0] = wrist_pos[0] + rotated_hand_vec[0];
+    *global_obj_pos[1] = wrist_pos[1] + rotated_hand_vec[1];
+    *global_obj_pos[2] = wrist_pos[2] + rotated_hand_vec[2];
 }
 

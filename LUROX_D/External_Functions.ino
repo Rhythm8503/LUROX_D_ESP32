@@ -149,15 +149,45 @@ void Handshake() {  // Pre-Defined Handshake
         vTaskDelay(pdMS_TO_TICKS(200));
       }
 
-      /* Return the hand back to open */
-      Gestures[0] = 0;
-      HandCode();
-      Neutral_Position();
     }
-
   }
+  /* Return the hand back to open */
+    Gestures[0] = 0;
+    HandCode();
+    Neutral_Position();
 }
 
+void HighFive() {
+  Extended_Position(); /* Extended Position */
+  ElbowPA[0] = 225;
+  WristPA[0] = 110; /* High Five Position */
+
+  #if DEBUGSYS
+  Serial.println("Beginning High-Five!");
+  #endif 
+
+  uint8_t Anim_Timer = millis(); /* Time out counter */
+
+  while((Anim_Timer > millis() - 10000)) { /* It will wait 15 seconds before timing out */
+    if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
+      break;
+    }
+       
+     if (Obj_Dist < 1000) { /* Someone is approaching! */
+      /* Pull Arm Forward */
+        ElbowPA[0] = 212;
+        ArmPA[0] = 160; /* Pull Arm Forward */
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+        if (Obj_Dist < 50) {
+          Extended_Position(); /* Return back! */
+        }
+      }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+    Neutral_Position();
+}
 
 /***************************************************************************************** 
                                   Hand Gesture Functions
