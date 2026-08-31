@@ -99,6 +99,16 @@ void Neutral_Position() { /* Straight Down position */
   HandCode();
 }
 
+void Wrist_Wave() {
+  for (int Wave = 0; Wave < 2; Wave++) {
+    WristRA[0] = 125;
+    vTaskDelay(pdMS_TO_TICKS(700));
+    WristRA[0] = 145;
+    vTaskDelay(pdMS_TO_TICKS(700));
+  }
+  WristRA[0] = 135;
+}
+
 void Wave_Movement() { // Pre-Defined Wave Animation
   /* Bring to Extended Position */
   Extended_Position();
@@ -106,15 +116,16 @@ void Wave_Movement() { // Pre-Defined Wave Animation
   Serial.println("Beginning Wave Animation!");
   #endif
 
-  WristRA[0] = 30;
-  WristPA[0] = 120;
+  WristPA[0] = 60;
 
   /* Wave Animation */
-  for (int Wave = 0; Wave < 3; Wave++) {
-    ArmYA[0] = 120;
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    ArmYA[0] = 150;
-    vTaskDelay(pdMS_TO_TICKS(3000));
+  for (int Wave = 0; Wave < 1; Wave++) {
+    ArmYA[0] = 130;
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    Wrist_Wave();
+    ArmYA[0] = 140;
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    Wrist_Wave();
     if (Anim_Break == true) {
       break;
     }
@@ -136,27 +147,33 @@ void Handshake() {  // Pre-Defined Handshake
   unsigned long Anim_Timer = millis(); /* Time out counter */
   vTaskDelay(pdMS_TO_TICKS(1000));
 
-  while((Anim_Timer > millis() - 15000)) { /* It will wait 15 seconds before timing out */
+  while((millis() - Anim_Timer) < 15000) { /* It will wait 15 seconds before timing out */
     if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
       break;
     }
 
-    if (Obj_Dist < 50) { /* Someone places their hand or object infront of the hand */
+    if (Obj_Dist < 40 && Obj_Dist > 0) { /* Someone places their hand or object infront of the hand */
+      #if DEBUGSYS
+      Serial.println(Obj_Dist);
+      #endif
+
       Gestures[0] = 1; // Close the Hand
       HandCode(); //Push the Change
+
       for (int Anim_Count = 0; Anim_Count < 2; Anim_Count++) {
         if (Obj_Dist > 500 || Anim_Break == true) {
           Extended_Position();
-          WristRA[0] = 45; /* 90 Degrees for the Handshake */ 
+          WristRA[0] = 135; /* 90 Degrees for the Handshake */ 
           break;
         }
-        ElbowPA[0] = 220; /* Shake the Person's Hand */
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        ElbowPA[0] = 170; /* Shake the Person's Hand */
+        vTaskDelay(pdMS_TO_TICKS(500));
         ElbowPA[0] = 180;
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
       }
-      vTaskDelay(pdMS_TO_TICKS(100)); 
+      break;
     }
+    vTaskDelay(pdMS_TO_TICKS(100)); 
   }
   /* Return the hand back to open */
     Gestures[0] = 0;
@@ -175,7 +192,7 @@ void HighFive() {
 
   unsigned long Anim_Timer = millis(); /* Time out counter */
 
-  while((Anim_Timer > millis() - 10000)) { /* It will wait 15 seconds before timing out */
+  while((millis() - Anim_Timer) < 10000) { /* It will wait 15 seconds before timing out */
     if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
       break;
     }

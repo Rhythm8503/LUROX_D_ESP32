@@ -12,7 +12,8 @@
                                   Primary Init Functions
 ******************************************************************************************/
 
-#define DEBUGSYS false
+#define DEBUGSYS true
+#define i2C_EN true
 
 void FreeRTOS_Initalization() {
   #if DEBUGSYS
@@ -61,16 +62,16 @@ void Library_Initalization() {
   K210Serial.begin(115200, SERIAL_8N1, 17, 18);  //Open K210 Port
   randomSeed(analogRead(1));                     //Activate randomness
 
-  #if i2c_EN
-    Wire.begin();                   //i2C at 100KHz
-  #endif
+  //#if i2c_EN
+  Wire.begin();                   //i2C at 100KHz
+  //#endif
 
   #if DEBUGSYS
   Serial.println("Embedded Communication Settled");
   #endif
 
   /* Palm sensor initalization */
-  #if i2c_EN
+  //#if i2c_EN
   IRSen.setTimeout(500); //500ms Read Periods
   IRSen.init();
   IRSen.startContinuous();
@@ -80,21 +81,21 @@ void Library_Initalization() {
   #endif
 
   /* Stepper Motor Encoder */
-  SHYAS.begin(); 
-  SHYAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
+  //SHYAS.begin(); 
+  //SHYAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
 
   #if DEBUGSYS
   Serial.println("Shoulder AS5600 Initalized");
   #endif
 
-  FRAS.begin();  
-  FRAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
+  //FRAS.begin();  
+  //FRAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
 
   #if DEBUGSYS
   Serial.println("Forearm AS5600 Initalized");
   #endif
 
-  #endif
+  //#endif
 }
 
 void Motor_Initalization() {

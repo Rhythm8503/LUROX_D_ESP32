@@ -11,7 +11,7 @@
 /***************************************************************************************** 
                                   Arm Position Functions
 ******************************************************************************************/
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 void ARMYA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
@@ -51,9 +51,9 @@ void ARMYA_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(5));
       for (int St = 0; St < SHY_steps; St++) {
         digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-        delayMicroseconds(400);        // Adjust for motor speed
+        delayMicroseconds(500);        // Adjust for motor speed
         digitalWrite(SHY_STEP, LOW);
-        delayMicroseconds(400);
+        delayMicroseconds(500);
       }
 
       // Update Position history
@@ -391,7 +391,10 @@ void Middle_Mot(void* pvParameters) {
   if (MiddleRA[0] != MiddleRA[1]) {
       /* Change Servo State */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+
+      #if DEBUGSYS
       Serial.println("Middle Active");
+      #endif
 
       HM.attach(MIDDLE, 500, 2500);
       HM.write(MiddleRA[0]);
@@ -507,7 +510,6 @@ void Sensor_Feedback(void* pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(10)); // 10ms Poll Period for Sensor Readings
 
     WristRA[2] = HandSensor(); /* Read and Declare Angle */
-    ArmYA[2] = UpperArmSensor(); /* Read and Declare Angle */
-   
+    //ArmYA[2] = UpperArmSensor(); /* Read and Declare Angle */  
   }
 }

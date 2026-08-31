@@ -32,7 +32,7 @@ bool Wander = true;
 bool SleepState = false;
 bool manualMode = false;
 bool Anim_Break = false;
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 /***************************************************************************************** 
                              Primary Initalizations Functions
@@ -64,6 +64,7 @@ void loop() {
   Bluetooth_Handle(); //Read Commands from BLE Terminal
 
   /* Standy By Function (For Now) */
+
   if (((millis() - ResetTimer) > 15000) && Wander == true) {
     ResetTimer = millis();
 
@@ -71,9 +72,10 @@ void loop() {
     Serial.println("===========================");
     #endif
     //Standby();
-     Wave_Movement();
-     vTaskDelay(pdMS_TO_TICKS(10000));
+     //Wave_Movement();
+     //vTaskDelay(pdMS_TO_TICKS(5000));
      Handshake();
+     vTaskDelay(pdMS_TO_TICKS(10000));
   }
   
   /* Sleep Mode */
