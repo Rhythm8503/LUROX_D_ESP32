@@ -77,7 +77,7 @@ void Extended_Position() { /* Extended out on the XYZ Plane */
   ArmRA[0] = 135;
   ArmPA[0] = 150;
   ArmYA[0] = 135;
-  ElbowPA[0] = 205;
+  ElbowPA[0] = 190;
   WristRA[0] = 135;
   WristPA[0] = 90;
   Gestures[0] = 0; // Open the Hand
@@ -139,7 +139,7 @@ void Wave_Movement() { // Pre-Defined Wave Animation
 
 void Handshake() {  // Pre-Defined Handshake
   Extended_Position(); /* Extended Position */
-  WristRA[0] = 45; /* 90 Degrees for the Handshake */ 
+  WristRA[0] = 225; /* 90 Degrees for the Handshake */ 
   #if DEBUGSYS
   Serial.println("Beginning Handshake!");
   #endif 
@@ -160,15 +160,15 @@ void Handshake() {  // Pre-Defined Handshake
       Gestures[0] = 1; // Close the Hand
       HandCode(); //Push the Change
 
-      for (int Anim_Count = 0; Anim_Count < 2; Anim_Count++) {
+      for (int Anim_Count = 0; Anim_Count < 3; Anim_Count++) {
         if (Obj_Dist > 500 || Anim_Break == true) {
           Extended_Position();
           WristRA[0] = 135; /* 90 Degrees for the Handshake */ 
           break;
         }
-        ElbowPA[0] = 170; /* Shake the Person's Hand */
+        ElbowPA[0] = 160; /* Shake the Person's Hand */
         vTaskDelay(pdMS_TO_TICKS(500));
-        ElbowPA[0] = 180;
+        ElbowPA[0] = 190;
         vTaskDelay(pdMS_TO_TICKS(500));
       }
       break;
@@ -197,7 +197,7 @@ void HighFive() {
       break;
     }
        
-     if (Obj_Dist < 500) { /* Someone is approaching! */
+     if (Obj_Dist < 300) { /* Someone is approaching! */
       /* Pull Arm Forward */
         ElbowPA[0] = 212;
         ArmPA[0] = 160; /* Pull Arm Forward */

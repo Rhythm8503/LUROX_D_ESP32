@@ -159,7 +159,7 @@ void ELPA_Mot(void* pvParameters) {
   Serial.println("Elbow Pitch Task Handle Opened");
   #endif
 
-  int ELPA_Offset = 3; /* Angle 138 is the true neutral */
+  int ELPA_Offset = -27; /* Angle 108 is the true neutral */
 
   while (1) {
     if (ElbowPA[0] != ElbowPA[1]) {  // Elbow Pitch

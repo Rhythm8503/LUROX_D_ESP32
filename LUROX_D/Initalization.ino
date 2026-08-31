@@ -74,7 +74,7 @@ void Library_Initalization() {
   //#if i2c_EN
   IRSen.setTimeout(500); //500ms Read Periods
   IRSen.init();
-  IRSen.startContinuous();
+  IRSen.startContinuous(1);
 
   #if DEBUGSYS
   Serial.println("VL53L0X Sensor Initalized");

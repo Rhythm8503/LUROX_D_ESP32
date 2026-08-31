@@ -72,8 +72,8 @@ void loop() {
     Serial.println("===========================");
     #endif
     //Standby();
-     //Wave_Movement();
-     //vTaskDelay(pdMS_TO_TICKS(5000));
+     Wave_Movement();
+     vTaskDelay(pdMS_TO_TICKS(10000));
      Handshake();
      vTaskDelay(pdMS_TO_TICKS(10000));
   }
