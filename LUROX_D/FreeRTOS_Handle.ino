@@ -49,11 +49,11 @@ void ARMYA_Mot(void* pvParameters) {
       // Enable Motor
       digitalWrite(SHY_EN, LOW);
       vTaskDelay(pdMS_TO_TICKS(5));
-      for (int St = 0; St >= SHY_steps; St++) {
+      for (int St = 0; St < SHY_steps; St++) {
         digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-        delayMicroseconds(500);        // Adjust for motor speed
+        delayMicroseconds(400);        // Adjust for motor speed
         digitalWrite(SHY_STEP, LOW);
-        delayMicroseconds(500);
+        delayMicroseconds(400);
       }
 
       // Update Position history
@@ -78,15 +78,15 @@ void ARMPA_Mot(void* pvParameters) {
     if (ArmPA[0] != ArmPA[1]) {  // Shoulder Pitch
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);   // Flag enable
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Shoulder Pitch Change!");            
       #endif    
 
-      int ArmPA_Dir = (ArmPA[0] < ArmPA[1]) ? 1 : -1;
+      int ArmPA_Dir = (ArmPA[0] > ArmPA[1]) ? 1 : -1;
 
       while (ArmPA[0] != ArmPA[1]) {
-        ArmPA[0] += ArmPA_Dir;
-        SHP.write(ArmPA[0] + ARMPA_Offset);
+        ArmPA[1] += ArmPA_Dir;
+        SHP.write(ArmPA[1] + ARMPA_Offset);
 
         int ArmPA_Dist = abs(ArmPA[1] - ArmPA[0]);
         int APA_DelayMs = map(ArmPA_Dist, 1, 270, 25, 1); // 50ms delay near target, 5ms far away
@@ -125,11 +125,11 @@ void ARMRA_Mot(void* pvParameters) {
       Serial.println("Shoulder Roll Change!");  
       #endif
 
-      int ArmRA_Dir = (ArmRA[0] < ArmRA[1]) ? 1 : -1;
+      int ArmRA_Dir = (ArmRA[0] > ArmRA[1]) ? 1 : -1;
 
       while (ArmRA[0] != ArmRA[1]) {
-        ArmRA[0] += ArmRA_Dir;
-        SHR.write(ArmRA[0] + ARMRA_Offset);
+        ArmRA[1] += ArmRA_Dir;
+        SHR.write(ArmRA[1] + ARMRA_Offset);
 
         int ArmRA_dist = abs(ArmRA[1] - ArmRA[0]);
         int ARA_DelayMs = map(ArmRA_dist, 1, 180, 25, 1); // 50ms delay near target, 5ms far away
@@ -155,7 +155,7 @@ void ARMRA_Mot(void* pvParameters) {
 void ELPA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Elbow Pitch Task Handle Opened");
   #endif
 
@@ -165,15 +165,15 @@ void ELPA_Mot(void* pvParameters) {
     if (ElbowPA[0] != ElbowPA[1]) {  // Elbow Pitch
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);    // Flag enable
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Elbow Pitch Change!");          
       #endif 
 
-      int ElbowPA_Dir = (ElbowPA[0] < ElbowPA[1]) ? 1 : -1;
+      int ElbowPA_Dir = (ElbowPA[0] > ElbowPA[1]) ? 1 : -1;
 
       while (ElbowPA[0] != ElbowPA[1]) {
-        ElbowPA[0] += ElbowPA_Dir;
-        EP.write(ElbowPA[0] + ELPA_Offset);
+        ElbowPA[1] += ElbowPA_Dir;
+        EP.write(ElbowPA[1] + ELPA_Offset);
 
         int ELP_Dist = abs(ElbowPA[1] - ElbowPA[0]);
         int ELP_DelayMs = map(ELP_Dist, 1, 270, 25, 1); // 100ms delay near target, 5ms far away
@@ -199,25 +199,25 @@ void ELPA_Mot(void* pvParameters) {
 void WRPA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Wrist Pitch Task Handle Opened");
   #endif
 
-  int WristPA_Offset = 10;
+  int WristPA_Offset = 0;
 
   while (1) {
     if (WristPA[0] != WristPA[1]) {  // Wrist Pitch
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Wrist Pitch Change!");
       #endif
 
-      int WristPA_Dir = (WristPA[0] < WristPA[1]) ? 1 : -1;
+      int WristPA_Dir = (WristPA[0] > WristPA[1]) ? 1 : -1;
 
       while (WristPA[0] != WristPA[1]) {
-        WristPA[0] += WristPA_Dir;
-        FP.write(WristPA[0]);
+        WristPA[1] += WristPA_Dir;
+        FP.write(WristPA[1] + WristPA_Offset);
 
         int WristPA_Dist = abs(WristPA[1] - WristPA[0]);
         int WPA_DelayMs = map(WristPA_Dist, 1, 180, 25, 1); // 50ms delay near target, 5ms far away
@@ -232,7 +232,7 @@ void WRPA_Mot(void* pvParameters) {
     } 
     else {
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
-      FP.write(WristPA[1]);
+      FP.write(WristPA[1] + WristPA_Offset);
       xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -242,7 +242,7 @@ void WRPA_Mot(void* pvParameters) {
 void WRRA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Wrist Roll Task Handle Opened");
   #endif
   
@@ -255,7 +255,7 @@ void WRRA_Mot(void* pvParameters) {
     if (abs(WristRA[0] - WristRA[1]) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Wrist Roll Change!");
       #endif
 
@@ -275,7 +275,7 @@ void WRRA_Mot(void* pvParameters) {
       digitalWrite(FR_EN, LOW);
       vTaskDelay(pdMS_TO_TICKS(5));
 
-      for (int St = 0; St >= FR_Steps; St++) {
+      for (int St = 0; St < FR_Steps; St++) {
         digitalWrite(FR_STEP, HIGH);  // Assumes Sstep2pin is defined
         delayMicroseconds(500);       // Adjust for motor speed
         digitalWrite(FR_STEP, LOW);
@@ -297,16 +297,17 @@ void WRRA_Mot(void* pvParameters) {
 void Thumb_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Thumb Task Handle Opened");
   #endif
+  //HT.attach(THUMB, 500, 2500);
 
   while (1) {
     if (ThumbRA[0] != ThumbRA[1]) {
       /* Change Servo State */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Thumb Active");
       #endif
 
@@ -338,16 +339,17 @@ void Thumb_Mot(void* pvParameters) {
 void Index_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Index Task Handle Opened");
   #endif
+  //HI.attach(INDEX, 500, 2500);
 
   while (1) {
   if (IndexRA[0] != IndexRA[1]) {
       /* Change Servo State */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Index Active");
       #endif
 
@@ -379,9 +381,11 @@ void Index_Mot(void* pvParameters) {
 void Middle_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Middle Task Handle Opened");
   #endif
+
+  //HM.attach(MIDDLE, 500, 2500);
 
   while (1) {
   if (MiddleRA[0] != MiddleRA[1]) {
@@ -417,16 +421,17 @@ void Middle_Mot(void* pvParameters) {
 void Ring_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Ring Task Handle Opened");
   #endif
+  HR.attach(RING, 500, 2500);
 
   while (1) {
   if (RingRA[0] != RingRA[1]) {
       /* Change Servo State */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Ring Active");
       #endif
 
@@ -458,16 +463,16 @@ void Ring_Mot(void* pvParameters) {
 void Pinky_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Pinky Task Handle Opened");
   #endif
-
+  HP.attach(PINKY, 500, 2500);
   while (1) {
     if (PinkyRA[0] != PinkyRA[1]) {
       /* Change Servo State */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Pinky Active");
       #endif
 

@@ -151,7 +151,7 @@ uint16_t ArmPA[3] =   {135, 135, 0 };  // Shoulder Pitch
 uint16_t ArmYA[3] =   {135, 135, 0 };  // Shoulder Yaw
 
 uint8_t ThumbRA[2] =  {180, 0};       // Thumb 
-uint8_t IndexRA[2] =  {0, 0};       // Index
+uint8_t IndexRA[2] =  {180, 0};       // Index
 uint8_t MiddleRA[2] = {180, 0};       // Middle
 uint8_t RingRA[2] =   {180, 0};       // Ring
 uint8_t PinkyRA[2] =  {180, 0};       // Pinky

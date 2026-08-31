@@ -15,7 +15,7 @@
 #define DEBUGSYS false
 
 void FreeRTOS_Initalization() {
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
     Serial.begin(115200); //Allow for Debug Reports to Serial Terminal----------/
   #endif
 
@@ -41,7 +41,7 @@ void FreeRTOS_Initalization() {
   
   xTaskCreatePinnedToCore(Sensor_Feedback, "Sensor Feedback", 20000, NULL, 1, &Feedback, 0);
   
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("FreeRTOS Tasks have been Handled");
   #endif
 }
@@ -53,7 +53,7 @@ void Library_Initalization() {
   ESP32PWM::allocateTimer(2);  //Hand Timer
   ESP32PWM::allocateTimer(3);  //Hand Timer
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Timers Allocated");
   #endif
 
@@ -65,17 +65,17 @@ void Library_Initalization() {
     Wire.begin();                   //i2C at 100KHz
   #endif
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Embedded Communication Settled");
   #endif
 
   /* Palm sensor initalization */
-  #ifdef i2c_EN
+  #if i2c_EN
   IRSen.setTimeout(500); //500ms Read Periods
   IRSen.init();
   IRSen.startContinuous();
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("VL53L0X Sensor Initalized");
   #endif
 
@@ -83,14 +83,14 @@ void Library_Initalization() {
   SHYAS.begin(); 
   SHYAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Shoulder AS5600 Initalized");
   #endif
 
   FRAS.begin();  
   FRAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Forearm AS5600 Initalized");
   #endif
 
@@ -109,7 +109,7 @@ void Motor_Initalization() {
   SHR.setPeriodHertz(50);  // Standard 50hz servo (Shoulder Roll)
   SHP.setPeriodHertz(50);  // Standard 50hz servo (Shoulder Pitch)
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Servo set to 50Hz");
   #endif
 
@@ -119,7 +119,7 @@ void Motor_Initalization() {
   SHR.attach(SHR_RO, 500, 2500);
   SHP.attach(SHR_PI, 500, 2500);
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Attached Position Servos to Pins");
   #endif
 
@@ -130,7 +130,7 @@ void Motor_Initalization() {
   pinMode(SHY_HallEffect, INPUT);
   digitalWrite(SHY_EN, HIGH);
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Shoulder Stepper Initalized");
   #endif
 
@@ -140,13 +140,13 @@ void Motor_Initalization() {
   pinMode(FR_HallEffect, INPUT);
   digitalWrite(FR_EN, HIGH);
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Forearm Stepper Initalizated");
   #endif
 }
 
 void Bluetooth_Initialization() {
-  #ifdef BUILD == 1
+  #if BUILD == 1
     BLEDevice::init("LUROX D: AZAMI");
 
   #elif BUILD == 2
@@ -179,12 +179,12 @@ void Bluetooth_Initialization() {
 
 void Stepper_Home() {
   /* Using the Hall Effect Sensor read the Forearm and Stepper and home */
-  StepperTimer = millis();
+  // StepperTimer = millis();
 
-  // Enable Motor
-  digitalWrite(SHY_EN, LOW);
+  // // Enable Motor
+  // digitalWrite(SHY_EN, LOW);
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Homing SHY Motor");
   #endif
 
@@ -196,41 +196,41 @@ void Stepper_Home() {
     delayMicroseconds(500);
   }
 
-  while(analogRead(SHY_HallEffect) < 100) {
-    digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-    delayMicroseconds(500);        // Adjust for motor speed
-    digitalWrite(SHY_STEP, LOW);
-    delayMicroseconds(500);
+  // while(analogRead(SHY_HallEffect) < 100) {
+  //   digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
+  //   delayMicroseconds(500);        // Adjust for motor speed
+  //   digitalWrite(SHY_STEP, LOW);
+  //   delayMicroseconds(500);
 
-    if ((millis() - StepperTimer) > 10000) {
+  //   if ((millis() - StepperTimer) > 10000) {
 
-      #ifdef DEBUGSYS
-      Serial.println("SHY Home Timed Out!");
-      #endif
+  //     #if DEBUGSYS
+  //     Serial.println("SHY Home Timed Out!");
+  //     #endif
 
-      digitalWrite(SHY_EN, HIGH);
-      break;
-    }
-  } 
+  //     digitalWrite(SHY_EN, HIGH);
+  //     break;
+  //   }
+  // } 
 
-  if((millis() - StepperTimer) <= 10000) {
-    int32_t SHY_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
-    SHYAS.resetPosition(SHY_home_pos);
-    SHY_home = true;
-    ArmYA[2] = UpperArmSensor();
-    ArmYA[1] = ArmYA[2];
+  // if((millis() - StepperTimer) <= 10000) {
+  //   int32_t SHY_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
+  //   SHYAS.resetPosition(SHY_home_pos);
+  //   SHY_home = true;
+  //   ArmYA[2] = UpperArmSensor();
+  //   ArmYA[1] = ArmYA[2];
 
-    #ifdef DEBUGSYS
-    Serial.println("Homed SHY Motor!");
-    #endif
-  }
+  //   #if DEBUGSYS
+  //   Serial.println("Homed SHY Motor!");
+  //   #endif
+  // }
   
-  digitalWrite(SHY_EN, HIGH); /*Disable SHY Motor */
-  StepperTimer = millis();    /* Restart Timer for Forearm motor */
+  // digitalWrite(SHY_EN, HIGH); /*Disable SHY Motor */
+  // StepperTimer = millis();    /* Restart Timer for Forearm motor */
 
-  digitalWrite(FR_EN, LOW);
+  // digitalWrite(FR_EN, LOW);
 
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Homing FR Motor");
   #endif
 
@@ -242,34 +242,34 @@ void Stepper_Home() {
     delayMicroseconds(500);
   }
 
-  while(analogRead(FR_HallEffect) < 100) {
-    digitalWrite(FR_STEP, HIGH);  
-    delayMicroseconds(500);       // Adjust for motor speed
-    digitalWrite(FR_STEP, LOW);
-    delayMicroseconds(500);
+  // while(analogRead(FR_HallEffect) < 100) {
+  //   digitalWrite(FR_STEP, HIGH);  
+  //   delayMicroseconds(500);       // Adjust for motor speed
+  //   digitalWrite(FR_STEP, LOW);
+  //   delayMicroseconds(500);
 
-    if ((millis() - StepperTimer > 10000)) {
+  //   if ((millis() - StepperTimer > 10000)) {
 
-      #ifdef DEBUGSYS
-      Serial.println("FR Home Timed Out!");
-      #endif
+  //     #if DEBUGSYS
+  //     Serial.println("FR Home Timed Out!");
+  //     #endif
 
-      digitalWrite(FR_EN, HIGH);
-      break;
-    }
-  }
+  //     digitalWrite(FR_EN, HIGH);
+  //     break;
+  //   }
+  // }
 
-  if(millis() - StepperTimer <= 10000) {
-    int32_t FR_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
-    FRAS.resetPosition(FR_home_pos);
-    FR_home = true;
-    WristRA[2] = HandSensor();
-    WristRA[1] = WristRA[2];
+  // if(millis() - StepperTimer <= 10000) {
+  //   int32_t FR_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
+  //   FRAS.resetPosition(FR_home_pos);
+  //   FR_home = true;
+  //   WristRA[2] = HandSensor();
+  //   WristRA[1] = WristRA[2];
 
-    #ifdef DEBUGSYS
-    Serial.println("Homed FR Motor");
-    #endif
-  }
+  //   #if DEBUGSYS
+  //   Serial.println("Homed FR Motor");
+  //   #endif
+  // }
 
-  digitalWrite(FR_EN, HIGH);  /* Disable FR Motor */
+  // digitalWrite(FR_EN, HIGH);  /* Disable FR Motor */
 }

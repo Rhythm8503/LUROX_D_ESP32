@@ -192,7 +192,7 @@ void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_inp
 
 
 void Halt_Function() {
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Halting Actions!");
   #endif
   /* Move to Pose Position */
@@ -200,7 +200,7 @@ void Halt_Function() {
 }
 
 void Gesture_Function(int req_ges, int int_ges) {
-  #ifdef DEBUGSYS
+  #if DEBUGSYS
   Serial.println("Displaying Gesture on Hand!");
   #endif
   /* Move to Pose Position */
@@ -286,7 +286,7 @@ void Action_Function(int spec_action, int obj_action) {
       Search_timeout = 0;
       CMD_IN = false;
 
-      #ifdef DEBUGSYS
+      #if DEBUGSYS
       Serial.println("Object not found, search timed out!");
       #endif
     }
@@ -300,7 +300,7 @@ void Action_Function(int spec_action, int obj_action) {
         ObjFound = false;
         CMD_IN = false;
 
-        #ifdef DEBUGSYS
+        #if DEBUGSYS
         Serial.println("Timeout Alignment, Cannot grab!");
         #endif
 
@@ -313,7 +313,7 @@ void Action_Function(int spec_action, int obj_action) {
   }
 
   if (ObjFound == true && HandTrack == true) {
-    #ifdef DEBUGSYS
+    #if DEBUGSYS
       Serial.println("Grabbing Object!");
     #endif
     Grab = true; 

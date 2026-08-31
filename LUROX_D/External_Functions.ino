@@ -10,7 +10,7 @@
 /***************************************************************************************** 
                                   Basic Motor Functions
 ******************************************************************************************/
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 void Standby() {  // Wander
   #if DEBUGSYS
@@ -19,10 +19,12 @@ void Standby() {  // Wander
 
   ArmPA[0] = random(135, 155);    //Shoulder Pitch
   ArmRA[0] = random(127, 133);    //Shoulder Roll
-  ArmYA[0] = random(105, 165);     //Shoulder Yaw
-  ElbowPA[0] = random(150, 200);  //Elbow Pitch
-  WristPA[0] = random(90, 110);   //Wrist Pitch
-  WristRA[0] = random(105, 165);   //Wrist Roll
+  ArmYA[0] = random(125, 145);     //Shoulder Yaw
+  ElbowPA[0] = random(145, 200);  //Elbow Pitch
+  WristPA[0] = random(90, 100);   //Wrist Pitch
+  WristRA[0] = random(115, 155);   //Wrist Roll
+  //Gestures[0] = random(0,1);
+  //HandCode();
 }
 
 void Sleep() {  // Place Arm to Sleep
@@ -105,19 +107,21 @@ void Wave_Movement() { // Pre-Defined Wave Animation
   #endif
 
   WristRA[0] = 30;
-  WristPA[0] = 110;
+  WristPA[0] = 120;
 
   /* Wave Animation */
   for (int Wave = 0; Wave < 3; Wave++) {
-    ArmYA[0] = 105;
-    vTaskDelay(pdMS_TO_TICKS(500));
-    ArmYA[0] = 165;
-    vTaskDelay(pdMS_TO_TICKS(500));
+    ArmYA[0] = 120;
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    ArmYA[0] = 150;
+    vTaskDelay(pdMS_TO_TICKS(3000));
     if (Anim_Break == true) {
       break;
     }
   }
   ArmYA[0] = 135;
+  WristRA[0] = 135;
+  WristPA[0] = 90;
   vTaskDelay(pdMS_TO_TICKS(500));
   Neutral_Position();
 }
@@ -129,7 +133,8 @@ void Handshake() {  // Pre-Defined Handshake
   Serial.println("Beginning Handshake!");
   #endif 
 
-  uint8_t Anim_Timer = millis(); /* Time out counter */
+  unsigned long Anim_Timer = millis(); /* Time out counter */
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
   while((Anim_Timer > millis() - 15000)) { /* It will wait 15 seconds before timing out */
     if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
@@ -140,17 +145,17 @@ void Handshake() {  // Pre-Defined Handshake
       Gestures[0] = 1; // Close the Hand
       HandCode(); //Push the Change
       for (int Anim_Count = 0; Anim_Count < 2; Anim_Count++) {
-        if (Obj_Dist > 150 || Anim_Break == true) {
+        if (Obj_Dist > 500 || Anim_Break == true) {
           Extended_Position();
           WristRA[0] = 45; /* 90 Degrees for the Handshake */ 
           break;
         }
         ElbowPA[0] = 220; /* Shake the Person's Hand */
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(1000));
         ElbowPA[0] = 180;
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(1000));
       }
-
+      vTaskDelay(pdMS_TO_TICKS(100)); 
     }
   }
   /* Return the hand back to open */
@@ -168,14 +173,14 @@ void HighFive() {
   Serial.println("Beginning High-Five!");
   #endif 
 
-  uint8_t Anim_Timer = millis(); /* Time out counter */
+  unsigned long Anim_Timer = millis(); /* Time out counter */
 
   while((Anim_Timer > millis() - 10000)) { /* It will wait 15 seconds before timing out */
     if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
       break;
     }
        
-     if (Obj_Dist < 1000) { /* Someone is approaching! */
+     if (Obj_Dist < 500) { /* Someone is approaching! */
       /* Pull Arm Forward */
         ElbowPA[0] = 212;
         ArmPA[0] = 160; /* Pull Arm Forward */
@@ -199,7 +204,7 @@ void HandCode() {                   // Hand Servos Control
     HandRot = true;
     Wander = false;
 
-    #ifdef DEBUGSYS
+    #if DEBUGSYS
     Serial.println("Changing Gestures");
     #endif 
 

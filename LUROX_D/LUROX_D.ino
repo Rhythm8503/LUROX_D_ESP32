@@ -40,7 +40,7 @@ bool Anim_Break = false;
 
 void setup() {
     /* Initalization for LUROX D */
-    #ifdef DEBUGSYS
+    #if DEBUGSYS
     Serial.begin(115200);
     #endif 
 
@@ -51,7 +51,6 @@ void setup() {
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
-    
 }
 
 /***************************************************************************************** 
@@ -68,10 +67,13 @@ void loop() {
   if (((millis() - ResetTimer) > 15000) && Wander == true) {
     ResetTimer = millis();
 
-    #ifdef DEBUGSYS
+    #if DEBUGSYS
     Serial.println("===========================");
     #endif
-    Standby();
+    //Standby();
+     Wave_Movement();
+     vTaskDelay(pdMS_TO_TICKS(10000));
+     Handshake();
   }
   
   /* Sleep Mode */
@@ -81,11 +83,11 @@ void loop() {
   }
 
   /* This loop wil primarily focus on the control loop reading information and kinematics instruction to grab objects */
-  // if (CMD_IN == true) {
-  //   Wander = false; // Disable Wandering
-  //   Extended_Position(); //Return to Standby-State
-  //   Decision_Backbone(request, intent, specification, objective); /* Actions will be governed */
-  // }
+  if (CMD_IN == true) {
+    Wander = false; // Disable Wandering
+    Extended_Position(); //Return to Standby-State
+    Decision_Backbone(request, intent, specification, objective); /* Actions will be governed */
+  }
 
 }
 
