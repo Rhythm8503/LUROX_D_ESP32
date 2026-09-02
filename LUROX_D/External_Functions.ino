@@ -11,6 +11,8 @@
                                   Basic Motor Functions
 ******************************************************************************************/
 #define DEBUGSYS true
+#define MODE_TOP_DOWN   1
+#define MODE_SIDE_SWIPE 2
 
 void Standby() {  // Wander
   #if DEBUGSYS
@@ -116,14 +118,14 @@ void Wave_Movement() { // Pre-Defined Wave Animation
   Serial.println("Beginning Wave Animation!");
   #endif
 
-  WristPA[0] = 60;
+  WristPA[0] = 40;
 
   /* Wave Animation */
   for (int Wave = 0; Wave < 1; Wave++) {
-    ArmYA[0] = 130;
+    ArmYA[0] = 125;
     vTaskDelay(pdMS_TO_TICKS(1500));
     Wrist_Wave();
-    ArmYA[0] = 140;
+    ArmYA[0] = 145;
     vTaskDelay(pdMS_TO_TICKS(1500));
     Wrist_Wave();
     if (Anim_Break == true) {
@@ -160,15 +162,15 @@ void Handshake() {  // Pre-Defined Handshake
       Gestures[0] = 1; // Close the Hand
       HandCode(); //Push the Change
 
-      for (int Anim_Count = 0; Anim_Count < 3; Anim_Count++) {
+      for (int Anim_Count = 0; Anim_Count < 2; Anim_Count++) {
         if (Obj_Dist > 500 || Anim_Break == true) {
           Extended_Position();
           WristRA[0] = 135; /* 90 Degrees for the Handshake */ 
           break;
         }
-        ElbowPA[0] = 160; /* Shake the Person's Hand */
+        ElbowPA[0] = 170; /* Shake the Person's Hand */
         vTaskDelay(pdMS_TO_TICKS(500));
-        ElbowPA[0] = 190;
+        ElbowPA[0] = 180;
         vTaskDelay(pdMS_TO_TICKS(500));
       }
       break;
@@ -183,8 +185,9 @@ void Handshake() {  // Pre-Defined Handshake
 
 void HighFive() {
   Extended_Position(); /* Extended Position */
-  ElbowPA[0] = 225;
-  WristPA[0] = 110; /* High Five Position */
+  ArmPA[0] = 150;
+  ElbowPA[0] = 180;
+  WristPA[0] = 40; /* High Five Position */
 
   #if DEBUGSYS
   Serial.println("Beginning High-Five!");
@@ -196,20 +199,20 @@ void HighFive() {
     if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
       break;
     }
-       
-     if (Obj_Dist < 300) { /* Someone is approaching! */
+     vTaskDelay(pdMS_TO_TICKS(1000));
+     if (Obj_Dist < 500) { /* Someone is approaching! */
       /* Pull Arm Forward */
-        ElbowPA[0] = 212;
+        ElbowPA[0] = 200;
         ArmPA[0] = 160; /* Pull Arm Forward */
-
-        vTaskDelay(pdMS_TO_TICKS(500));
-        if (Obj_Dist < 50) {
-          Extended_Position(); /* Return back! */
+        vTaskDelay(pdMS_TO_TICKS(10));
+        if (Obj_Dist > 100) {
+          break;
         }
       }
     }
 
-    vTaskDelay(pdMS_TO_TICKS(500));
+    Extended_Position(); /* Return back! */
+    vTaskDelay(pdMS_TO_TICKS(1000));
     Neutral_Position();
 }
 
@@ -353,17 +356,17 @@ int HandFunc(int TSPer, bool CF, byte SF) {  //Writing to Hand
   switch (SF) {
     case 0:
       if (CF == 1) {
-        ThumbRA[0] = 180;
-      } else {
         ThumbRA[0] = 0;
+      } else {
+        ThumbRA[0] = 180;
       }
       break;
 
     case 1:
       if (CF == 1) {
-        IndexRA[0] = 180;
-      } else {
         IndexRA[0] = 0;
+      } else {
+        IndexRA[0] = 180;
       }
       break;
 
@@ -652,3 +655,259 @@ class MyCallbacks : public BLECharacteristicCallbacks {
     }
   }
 };
+
+void Serial_Terminal() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    if (input.length() == 0) return;
+
+    // Help menu
+    if (input == "help" || input == "?") {
+      Serial.println("\n=== LUROX D Kinematics Terminal ===");
+      Serial.println("move X Y Z MODE - Run trajectory to X,Y,Z (mm)");
+      Serial.println("  MODE: 1=TOP_DOWN, 2=SIDE_SWIPE");
+      Serial.println("test - Run test trajectory sequence");
+      Serial.println("pos - Show current arm angles");
+      Serial.println("fk - Show current end effector position");
+      Serial.println("help - Show this menu");
+      Serial.println("=== Position Commands ===");
+      Serial.println("set - Show current setpoints");
+      Serial.println("set neutral - Go to neutral position");
+      Serial.println("set extended - Go to extended position");
+      Serial.println("set all <r> <p> <y> <e> <wr> <wp> - Set all joint angles");
+      Serial.println("set <joint> <value> - Set individual joint (roll/r, pitch/p, yaw/y, elbow/e, wristr/wr, wristp/wp)");
+      Serial.println("set gesture/g <0-9> - Set hand gesture");
+      return;
+    }
+
+    // Show current angles
+    if (input == "pos") {
+      Serial.print("Current Angles: ");
+      Serial.print("Roll="); Serial.print(ArmRA[1]);
+      Serial.print(" Pitch="); Serial.print(ArmPA[1]);
+      Serial.print(" Yaw="); Serial.print(ArmYA[1]);
+      Serial.print(" Elbow="); Serial.println(ElbowPA[1]);
+      return;
+    }
+
+    // Show forward kinematics position
+    if (input == "fk") {
+      double theta[4] = {(double)ArmRA[1], (double)ArmPA[1], (double)ArmYA[1], (double)ElbowPA[1]};
+      double pos[3];
+      double R_out[3][3];
+      Pos_Fwrd_Kin(theta, pos, R_out);
+      Serial.print("End Effector Position: X=");
+      Serial.print(pos[0]);
+      Serial.print("mm Y=");
+      Serial.print(pos[1]);
+      Serial.print("mm Z=");
+      Serial.print(pos[2]);
+      Serial.println("mm");
+      return;
+    }
+
+    // Test trajectory sequence
+    if (input == "test") {
+      Serial.println("Running test trajectory sequence...");
+
+      // Test point 1: Extended forward
+      double test1[3] = {0, 200, -200};
+      Run_Trajectory(test1, MODE_TOP_DOWN);
+      vTaskDelay(pdMS_TO_TICKS(2000));
+
+      // Test point 2: Up and right
+      double test2[3] = {100, 200, -250};
+      Run_Trajectory(test2, MODE_SIDE_SWIPE);
+      vTaskDelay(pdMS_TO_TICKS(2000));
+
+      // Return to neutral
+      double test3[3] = {100, 200, -300};
+      Run_Trajectory(test3, MODE_TOP_DOWN);
+
+      Serial.println("Test sequence complete.");
+      return;
+    }
+
+    // Move command: "move X Y Z MODE"
+    if (input.startsWith("move ")) {
+      // Parse the command
+      input = input.substring(5); // Remove "move "
+      
+      // Find the space positions
+      int space1 = input.indexOf(' ');
+      int space2 = input.indexOf(' ', space1 + 1);
+      int space3 = input.indexOf(' ', space2 + 1);
+
+      if (space3 == -1) space3 = input.length();
+
+      if (space1 == -1 || space2 == -1) {
+        Serial.println("Error: Usage: move X Y Z MODE");
+        return;
+      }
+
+      // Extract values
+      double x = input.substring(0, space1).toFloat();
+      double y = input.substring(space1 + 1, space2).toFloat();
+      double z = input.substring(space2 + 1, space3).toFloat();
+      int mode = 1; // Default to TOP_DOWN
+
+      if (space3 < input.length()) {
+        mode = input.substring(space3 + 1).toInt();
+        if (mode != 1 && mode != 2) {
+          Serial.println("Error: MODE must be 1 (TOP_DOWN) or 2 (SIDE_SWIPE)");
+          return;
+        }
+      }
+
+      Serial.print("Moving to X=");
+      Serial.print(x);
+      Serial.print(" Y=");
+      Serial.print(y);
+      Serial.print(" Z=");
+      Serial.print(z);
+      Serial.print(" Mode=");
+      Serial.println(mode);
+
+      double target[3] = {x, y, z};
+      float error = Run_Trajectory(target, mode);
+
+      if (error < 0) {
+        Serial.println("Error: Target out of reach!");
+      } else {
+        Serial.println("Movement complete.");
+      }
+      return;
+    }
+
+    if (input == "set") {
+  Serial.println("\nCurrent Setpoints:");
+  Serial.print("  Roll="); Serial.print(ArmRA[0]);
+  Serial.print(" Pitch="); Serial.print(ArmPA[0]);
+  Serial.print(" Yaw="); Serial.print(ArmYA[0]);
+  Serial.print(" Elbow="); Serial.print(ElbowPA[0]);
+  Serial.print(" WristR="); Serial.print(WristRA[0]);
+  Serial.print(" WristP="); Serial.println(WristPA[0]);
+  Serial.print("  Gesture="); Serial.println(Gestures[0]);
+  return;
+}
+
+// Set arm position commands
+if (input.startsWith("set ")) {
+  input = input.substring(4);
+
+  // Preset positions
+  if (input == "neutral") {
+    Neutral_Position();
+    Serial.println("Set to neutral position.");
+    return;
+  }
+  if (input == "extended") {
+    Extended_Position();
+    Serial.println("Set to extended position.");
+    return;
+  }
+
+  // Parse command
+  int space1 = input.indexOf(' ');
+  String cmd = (space1 != -1) ? input.substring(0, space1) : input;
+  String args = (space1 != -1) ? input.substring(space1 + 1) : "";
+
+  // Set ALL joints at once: set all <roll> <pitch> <yaw> <elbow> <wristr> <wristp>
+  if (cmd == "all") {
+    int values[6];
+    int count = 0;
+    int start = 0;
+    int end;
+
+    while (count < 6 && start < args.length()) {
+      end = args.indexOf(' ', start);
+      if (end == -1) end = args.length();
+      if (start >= end) break;
+
+      values[count] = args.substring(start, end).toInt();
+      count++;
+      start = end + 1;
+    }
+
+    if (count == 6) {
+      // Apply your physical joint limits + offsets
+      ArmRA[0]   = constrain(values[0], 115, 155);   // 120-140° physical
+      ArmPA[0]   = constrain(values[1], 135, 205);   // 120-150° physical
+      ArmYA[0]   = constrain(values[2], 0, 270);   // 125-145° physical
+      ElbowPA[0] = constrain(values[3], 130, 205);   // 132-138° physical
+      WristRA[0] = constrain(values[4], 30, 240);   // Conservative range
+      WristPA[0] = constrain(values[5], 40, 120);    // Conservative range
+
+      Serial.println("All joints set:");
+      Serial.print("  Roll="); Serial.print(ArmRA[0]);
+      Serial.print(" Pitch="); Serial.print(ArmPA[0]);
+      Serial.print(" Yaw="); Serial.print(ArmYA[0]);
+      Serial.print(" Elbow="); Serial.print(ElbowPA[0]);
+      Serial.print(" WristR="); Serial.print(WristRA[0]);
+      Serial.print(" WristP="); Serial.println(WristPA[0]);
+    } else {
+      Serial.println("Error: Need 6 values for 'set all' (roll pitch yaw elbow wristr wristp)");
+    }
+    return;
+  }
+
+  // Individual joint commands
+    int value = args.toInt();
+    bool valid = true;
+
+    if (cmd == "roll" || cmd == "r") {
+      ArmRA[0] = constrain(value, 115, 155);
+      Serial.print("Arm Roll set to: "); Serial.println(ArmRA[0]);
+    }
+    else if (cmd == "pitch" || cmd == "p") {
+      ArmPA[0] = constrain(value, 135, 205);
+      Serial.print("Arm Pitch set to: "); Serial.println(ArmPA[0]);
+    }
+    else if (cmd == "yaw" || cmd == "y") {
+      ArmYA[0] = constrain(value, 0, 270);
+      Serial.print("Arm Yaw set to: "); Serial.println(ArmYA[0]);
+    }
+    else if (cmd == "elbow" || cmd == "e") {
+      ElbowPA[0] = constrain(value, 130, 205);
+      Serial.print("Elbow Pitch set to: "); Serial.println(ElbowPA[0]);
+    }
+    else if (cmd == "wristr" || cmd == "wr") {
+      WristRA[0] = constrain(value, 30, 240);
+      Serial.print("Wrist Roll set to: "); Serial.println(WristRA[0]);
+    }
+    else if (cmd == "wristp" || cmd == "wp") {
+      WristPA[0] = constrain(value, 50, 110);
+      Serial.print("Wrist Pitch set to: "); Serial.println(WristPA[0]);
+    }
+    else if (cmd == "gesture" || cmd == "g") {
+      if (value >= 0 && value <= 9) {
+        Gestures[0] = value;
+        HandCode();
+        Serial.print("Gesture set to: "); Serial.println(Gestures[0]);
+      } else {
+        Serial.println("Error: Gesture must be 0-9");
+        valid = false;
+      }
+    }
+    else {
+      Serial.println("Unknown set command. Usage:");
+      Serial.println("  set - show current setpoints");
+      Serial.println("  set neutral - go to neutral position");
+      Serial.println("  set extended - go to extended position");
+      Serial.println("  set all <r> <p> <y> <e> <wr> <wp> - set all joints");
+      Serial.println("  set <joint> <value> - set individual joint");
+      Serial.println("  Joints: roll/r, pitch/p, yaw/y, elbow/e, wristr/wr, wristp/wp, gesture/g");
+      valid = false;
+    }
+
+    if (valid && cmd != "all") {
+      Serial.println("Setpoint updated. Use 'fk' to see forward kinematics result.");
+    }
+    return;
+  }
+
+    Serial.println("Unknown command. Type 'help' for options.");
+  }
+}

@@ -19,9 +19,9 @@ const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */
 const uint8_t Neutral_Pos = 135;
 const uint16_t Joint_limits[4][2] = {
                                    {115, 155}, /* Shoulder Roll */
-                                   {130, 220}, /* Shoulder Pitch */
+                                   {133, 205}, /* Shoulder Pitch */
                                    {0, 270},   /* Shoulder Yaw */
-                                   {130, 225}  /* Elbow Pitch */
+                                   {130, 205}  /* Elbow Pitch */
                                    }; 
 const float W[4] = {0.25, 0.2, 0.1, 0.005}; /* Angle Abuse Weights */
 const double   IK_Filter_Deg = 10.0;     /* kinematic bounding box   */
@@ -186,8 +186,8 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
 
         /* Clamp to joint limits */
         for (int i = 0; i < 4; ++i) {
-            if (Inv_theta[i] < Joint_limits[i][0]) Inv_theta[i] = Joint_limits[i][0];
-            if (Inv_theta[i] > Joint_limits[i][1]) Inv_theta[i] = Joint_limits[i][1];
+            if (Inv_theta[i] < local_lim[i][0]) Inv_theta[i] = local_lim[i][0];
+            if (Inv_theta[i] > local_lim[i][1]) Inv_theta[i] = local_lim[i][1];
         }
 
         /* Stagnation backtrack */
@@ -198,8 +198,8 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
             }
             /* Re-clamp after backtrack */
             for (int i = 0; i < 4; ++i) {
-                if (Inv_theta[i] < Joint_limits[i][0]) Inv_theta[i] = Joint_limits[i][0];
-                if (Inv_theta[i] > Joint_limits[i][1]) Inv_theta[i] = Joint_limits[i][1];
+                if (Inv_theta[i] < local_lim[i][0]) Inv_theta[i] = local_lim[i][0];
+                if (Inv_theta[i] > local_lim[i][1]) Inv_theta[i] = local_lim[i][1];
             }
         }
 

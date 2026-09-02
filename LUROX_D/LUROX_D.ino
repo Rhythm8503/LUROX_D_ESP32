@@ -65,18 +65,17 @@ void loop() {
 
   /* Standy By Function (For Now) */
 
-  if (((millis() - ResetTimer) > 15000) && Wander == true) {
-    ResetTimer = millis();
+  // if (((millis() - ResetTimer) > 15000) && Wander == true) {
+  //   ResetTimer = millis();
 
-    #if DEBUGSYS
-    Serial.println("===========================");
-    #endif
-    //Standby();
-     Wave_Movement();
-     vTaskDelay(pdMS_TO_TICKS(10000));
-     Handshake();
-     vTaskDelay(pdMS_TO_TICKS(10000));
-  }
+  //   #if DEBUGSYS
+  //   Serial.println("===========================");
+  //   #endif
+  //   Standby();
+  // }
+  /* Kinematics Function */
+  Serial_Terminal();
+
   
   /* Sleep Mode */
   if (Wander == false && SleepState == true) {

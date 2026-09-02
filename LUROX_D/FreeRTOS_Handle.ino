@@ -89,7 +89,7 @@ void ARMPA_Mot(void* pvParameters) {
         SHP.write(ArmPA[1] + ARMPA_Offset);
 
         int ArmPA_Dist = abs(ArmPA[1] - ArmPA[0]);
-        int APA_DelayMs = map(ArmPA_Dist, 1, 270, 25, 1); // 50ms delay near target, 5ms far away
+        int APA_DelayMs = map(ArmPA_Dist, 1, 270, 8, 1); // 50ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(APA_DelayMs)); // Non-blocking RTOS delay
       }
@@ -176,7 +176,7 @@ void ELPA_Mot(void* pvParameters) {
         EP.write(ElbowPA[1] + ELPA_Offset);
 
         int ELP_Dist = abs(ElbowPA[1] - ElbowPA[0]);
-        int ELP_DelayMs = map(ELP_Dist, 1, 270, 25, 1); // 100ms delay near target, 5ms far away
+        int ELP_DelayMs = map(ELP_Dist, 1, 225, 8, 1); // 100ms delay near target, 5ms far away
 
         vTaskDelay(pdMS_TO_TICKS(ELP_DelayMs)); // Non-blocking RTOS delay
         }

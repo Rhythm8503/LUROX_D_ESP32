@@ -13,7 +13,7 @@ const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
-#define STEP_DELAY_MS  20   /* dwell per micro-step so servos physically settle */
+#define STEP_DELAY_MS  10   /* dwell per micro-step so servos physically settle */
 #define DEBUGSYS false
 
 /***************************************************************************************** 
@@ -21,16 +21,22 @@ const int Traj_Points = 50;
 ******************************************************************************************/
 
 void Get_Current_Angles(double theta[4]) { // Grab Current Angles from Robotic Arm
-    theta[0] = (double)ArmRA[1];
+    //theta[0] = (double)ArmRA[1];
     theta[1] = (double)ArmPA[1];
-    theta[2] = (double)ArmYA[1];
+    //theta[2] = (double)ArmYA[1];
     theta[3] = (double)ElbowPA[1];
+
+    theta[0] = 270.0 - (double)ArmRA[1];;   // Flip Arm Roll around 135°
+    theta[2] = 270.0 - (double)ArmYA[1];   // Flip Arm Yaw around 135°
 }
 
 void Move_Arm_Pose(const double theta[4]) { //Update Arm with New Angles
-    ArmRA[0]   = (int)lround(theta[0]);
+    int Mod_theta0 = 270.0 - theta[0];   // Flip Arm Roll around 135°
+    int Mod_theta2 = 270.0 - theta[2];   // Flip Arm Yaw around 135°
+
+    ArmRA[0]   = (int)lround(Mod_theta0);
     ArmPA[0]   = (int)lround(theta[1]);
-    ArmYA[0]   = (int)lround(theta[2]);
+    ArmYA[0]   = (int)lround(Mod_theta2);
     ElbowPA[0] = (int)lround(theta[3]);
 }
 
