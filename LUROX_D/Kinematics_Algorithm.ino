@@ -220,7 +220,7 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
 float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, float* outY, float* outZ) {
     // Convert angles to radians
     float pitch_rad = DEG_TO_RAD(pitch);
-    float roll_rad = DEG_TO_RAD(roll);
+    float roll_rad = DEG_TO_RAD(roll - 225); /* Shifting the roll by 225 degrees to ensure 135 is neutral */
 
     // Compute direction vector using spherical coordinates
     // Pitch (θ) is the angle from the positive z-axis (0° points along +z)
@@ -233,7 +233,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, floa
     // Unit direction vector
     *outX = sin_pitch * cos_roll; // x = sin(θ) * cos(φ)
     *outY = sin_pitch * sin_roll; // y = sin(θ) * sin(φ)
-    *outZ = cos_pitch;            // z = cos(θ)
+    *outZ = -cos_pitch;            // z = cos(θ)
 
     *magnitude = Obj_Dist; // Retrieve Distance from IR Sensor
 }
@@ -248,7 +248,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   uint16_t joint6Neutral = 90;
 
   const uint8_t joint5Limits[2] = { 30, 240 }; /* 135 is Nominal, range from 30 to 240 */
-  const uint8_t joint6Limits[2] = { 60, 120 }; /* 90 is Nominal, range from 60 to 120 */
+  const uint8_t joint6Limits[2] = { 30, 110 }; /* 90 is Nominal, range from 60 to 120 */
 
   const uint8_t CenterX = 112;
   const uint8_t CenterY = 112;
@@ -274,19 +274,20 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
     *A6N = round(A6);
     return 1; /* Locked onto Target */
   }
-
-  float angleRad = atan2(ErrorY, ErrorX);
-  float targetRollDeg = RAD_TO_DEG(angleRad);
+  
+  // Roll Alignment
+  float targetRollDeg = RAD_TO_DEG(atan2(ErrorY, ErrorX));
   float rollError = 90.0 - targetRollDeg;
-
   rollError = fmodf((rollError + 180.0), 360.0);
 
   if (rollError < 0) rollError += 360.0;
   rollError -= 180.0;
 
+  float pitchError = Cam_DistR * cos(DEG_TO_RAD(rollError));
+
   // 4. Update Kinematics proportionally
   float nextA5 = A5 + (Kp * rollError);
-  float nextA6 = A6 + (Kp * Cam_DistR);
+  float nextA6 = A6 + (Kp * pitchError);
 
   // Constrain to angles
   *A5N = (int)round(constrain(nextA5, joint5Limits[0], joint5Limits[1]));
@@ -307,15 +308,23 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     // 2. Get Object's Local XYZ Vector (Joints 5 to 6)
     Hand_Fwrd_Kin(A6, A5, &Magnitude, &hand_local[0], &hand_local[1], &hand_local[2]);
 
-    // 3. Rotate local hand vector into global orientation: V_global = R_arm * hand_local
-    double rotated_hand_vec[3];
-    rotated_hand_vec[0] = R_arm[0][0]*hand_local[0] + R_arm[0][1]*hand_local[1] + R_arm[0][2]*hand_local[2];
-    rotated_hand_vec[1] = R_arm[1][0]*hand_local[0] + R_arm[1][1]*hand_local[1] + R_arm[1][2]*hand_local[2];
-    rotated_hand_vec[2] = R_arm[2][0]*hand_local[0] + R_arm[2][1]*hand_local[1] + R_arm[2][2]*hand_local[2];
+    double cam_origin_global[3];
+    cam_origin_global[0] = wrist_pos[0] + (R_arm[0][2] * -80.0);
+    cam_origin_global[1] = wrist_pos[1] + (R_arm[1][2] * -80.0);
+    cam_origin_global[2] = wrist_pos[2] + (R_arm[2][2] * -80.0);
 
-    // 4. Translate: Add rotated hand vector to the global wrist position
-    global_obj_pos[0] = wrist_pos[0] + rotated_hand_vec[0];
-    global_obj_pos[1] = wrist_pos[1] + rotated_hand_vec[1];
-    global_obj_pos[2] = wrist_pos[2] + rotated_hand_vec[2];
+    // 4. Scale Unit Vector by physical Infrared distance
+    double local_target_vec[3] = {hand_local[0] * Magnitude, hand_local[1] * Magnitude, hand_local[2] * Magnitude};
+
+    // 5. Rotate scaled vector into Global Space
+    double global_target_vec[3];
+    global_target_vec[0] = R_arm[0][0]*local_target_vec[0] + R_arm[0][1]*local_target_vec[1] + R_arm[0][2]*local_target_vec[2];
+    global_target_vec[1] = R_arm[1][0]*local_target_vec[0] + R_arm[1][1]*local_target_vec[1] + R_arm[1][2]*local_target_vec[2];
+    global_target_vec[2] = R_arm[2][0]*local_target_vec[0] + R_arm[2][1]*local_target_vec[1] + R_arm[2][2]*local_target_vec[2];
+
+    // 6. Translate: Add Global Ray to True Camera Origin
+    global_obj_pos[0] = cam_origin_global[0] + global_target_vec[0];
+    global_obj_pos[1] = cam_origin_global[1] + global_target_vec[1];
+    global_obj_pos[2] = cam_origin_global[2] + global_target_vec[2];
 }
 

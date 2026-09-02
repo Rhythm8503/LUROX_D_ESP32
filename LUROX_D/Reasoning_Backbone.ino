@@ -196,7 +196,6 @@ void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_inp
     }
 }
 
-
 void Halt_Function() {
   #if DEBUGSYS
   Serial.println("Halting Actions!");
