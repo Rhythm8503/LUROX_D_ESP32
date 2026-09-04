@@ -48,6 +48,8 @@ from speechrec_custom import Interrupt_Load
 import uart_custom
 from uart_custom import Comm
 from uart_custom import init_uart
+from uart_custom import UART_Layered_Track
+from uart_custom import UART_Layered_Comms
 
 import sk9822_custom
 from sk9822_custom import sk9822_init
@@ -282,7 +284,7 @@ def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_
                             tracked_objects.remove(track)
 
                 for track in tracked_objects:
-                    if track['missed_frames'] <= 2:
+                    if track['missed_frames'] <= 4:
                         UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close)
 
             else:
@@ -320,33 +322,35 @@ def control_loop(state):
             if sr.Done == sr.recognize():
                 res = sr.result()
                 if res != None:
-                    if 0 <= res[0] <= 9: # Request command
-                        Request = res[0]
+                    if 0 <= res[0] <= 7: # Request command
+                        Request = math.floor(res[0] / 2) # Convert to 0-3 Range.
                         SpeechLayer = 2
                         Layer2_Load() # Loading the next layer!
                         brightness_values = [50, 50, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 10 <= res[0] <= 15: # Direct Command
-                        DirectIntent = res[0]
-                        UART_Layered_Direct(UARTLayer3_Open, DirectIntent, SpeechLayer, UARTLayer3_Close)
+                    if 8 <= res[0] <= 11: # Direct Command 
+                        Request = math.floor(res[0] / 2) # Convert to 4-5 Range.
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, 0, 0, 0, UARTLayer_1_Close) # Direct Instruction
                         SpeechLayer = 0
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 16 <= res[0] <= 29: # Gesture Command
-                        Gesture = res[0]
-                        UART_Layered_Direct(UARTLayer3_Open, Gesture, SpeechLayer, UARTLayer3_Close)
+                    if 16 <= res[0] <= 25: # Gesture Command
+                        Request = math.floor(res[0] / 2) # Convert to 6-10 Range.
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, 0, 0, 0, UARTLayer_1_Close) # Direct Instruction
                         SpeechLayer = 0
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 30 <= res[0] <= 33:
+                    if 26 <= res[0] <= 29: # HALT!
+                        Request = math.floor(res[0] / 2) # Convert to 11-12 Range.
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, 0, 0, 0, UARTLayer_1_Close) # Direct Instruction
                         SpeechLayer = 0
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -358,70 +362,83 @@ def control_loop(state):
                 res = sr.result()
                 if res != None:
                     if 0 <= res[0] <= 7: # Intent command
-                        Intent = res[0]
+                        Intent = math.floor(res[0] / 2) # Convert to 0-3 Range
                         SpeechLayer = 3
                         Layer3_Load() # Loading the next layer!
                         brightness_values = [50, 50, 50, 50, 50, 50, 0, 0, 0, 0, 0, 0]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 8 <= res[0] <= 21: # Gesture command
-                        Gesture = res[0]
-                        UART_Layered_Direct(UARTLayer3_Open, Gesture, SpeechLayer, UARTLayer3_Close)
+                    if 8 <= res[0] <= 23: # Gesture command
+                        Intent = math.floor(res[0] / 2) # Convert to 4-11 Range
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, 0, 0, UARTLayer_1_Close) # Direct Instruction
                         SpeechLayer = 0
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 22 <= res[0] <= 25: # Interrupt
+                    if 24 <= res[0] <= 27: # HALT!
+                        Intent = math.floor(res[0] / 2) # Convert to 12-13 Range
                         SpeechLayer = 0
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, 0, 0, UARTLayer_1_Close) # Force Hand to HALT
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-        elif SpeechLayer == 3: # Objective
+        elif SpeechLayer == 3: # Specification
             if sr.Done == sr.recognize():
                 res = sr.result()
                 if res != None:
-                    if 0 <= res[0] <= 15: # Objective command
-                        Objective = res[0]
+                    if 0 <= res[0] <= 19: # Specification command
+                        Specification = math.floor(res[0] / 2) # Convert to 0-9
                         SpeechLayer = 4
                         Layer4_Load()
                         brightness_values = [50, 50, 50, 50, 50, 50, 50, 50, 50, 0, 0, 0]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 16 <= res[0] <= 19: # Direct command
-                        DirectIntent = res[0]
-                        UART_Layered_Direct(UARTLayer3_Open, DirectIntent, SpeechLayer, UARTLayer3_Close)
+                    if 20 <= res[0] <= 43: # Direct command
+                        Specification = math.floor(res[0] / 2) # Convert to 10 - 20
                         SpeechLayer = 0
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, Specification, 0, UARTLayer_1_Close) # Direct Instruction
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-                    if 20 <= res[0] <= 23: # Interrupt
+                    if 44 <= res[0] <= 47: # HALT!
+                        Specification  = math.floor(res[0] / 2) # Convert to 21 - 22
                         SpeechLayer = 0
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, Specification, 0, UARTLayer_1_Close) # Direct Instruction
                         Layer0_Load() # Loading the HOME Layer!
                         brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
 
-        elif SpeechLayer == 4: #Specification
+        elif SpeechLayer == 4: # Objective
             if sr.Done == sr.recognize():
                 res = sr.result()
                 if res != None:
-                    if 0 <= res[0] <= 19: # Specification command
-                        Specification = res[0]
+                    if 0 <= res[0] <= 21: # Objective command
+                        Objective = math.floor(res[0] / 2) # Convert to 0-10
                         SpeechLayer = 5
                         ObjectRec = True
-                        Layer5_Load()
+                        Interrupt_Load()
                         brightness_values = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
                         color = [50, 0, 0]  # Red color
                         set_led_ring(brightness_values, color)
-                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, Objective, Specification, UARTLayer_1_Close)
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, Specification, Objective, UARTLayer_1_Close)
+
+                    if 22 <= res[0] <= 25: # HALT!
+                        Objective = math.floor(res[0] / 2) # Convert to 11 - 12
+                        SpeechLayer = 0
+                        UART_Layered_Comms(UARTLayer_1_Open, Request, Intent, Specification, Objective, UARTLayer_1_Close) # Direct Instruction
+                        Layer0_Load() # Loading the HOME Layer!
+                        brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                        color = [50, 0, 0]  # Red color
+                        set_led_ring(brightness_values, color)
 
         elif SpeechLayer == 5: #Interrupt/Object loop
             main(anchors = anchors, labels=labels, model_addr="/sd/model-192544.kmodel")
