@@ -116,10 +116,8 @@ uint16_t FRSP = 500;  //Microsecond Pulse Width for Forearm Roll Steps
 #define STATE_WAITING_LAYER3_CLOSE 4
 
 #define MODE_STANDARD 0
-#define MODE_CON    1
-#define MODE_PARTY  2
-#define MODE_MANUAL 3
-#define MODE_SLEEP  4
+#define MODE_MANUAL 1
+#define MODE_SLEEP 2
 
 /* Semaphore Definitions */
 #define MAX_CONCURRENT_MOTORS 5
@@ -168,7 +166,7 @@ int16_t Obj_Dist = 500;
 
 /* ################################################################################################ */
 
-/* General Modes: 0 = Standard, 1 = Convention Cosplay, 2 = Party Cosplay */
+/* General Modes: 0 = Standard, 1 = Manual, 2 = Sleep */
 uint8_t GeneralMode;
 
 /* Communication Variables */
@@ -180,6 +178,7 @@ uint8_t objX, objY, objW, objH; // Object XY and Box Size used to determine Desi
 char commandBuffer[32];         // Buffer for command parsing
 char originalCommand[32];       // Buffer to store original command for echo
 uint8_t selectedLimb = 0;      
+uint8_t request, intention, specification, objective; // Parsed command values
 
 /* ################################################################################################ */
 
@@ -209,7 +208,6 @@ Objective -> 0 - 10 = Objective (Wallet[0], Pliers[1], Wrench[2], Cup[3], Phone[
 Objective -> 11 - 12 = Interrupt (Stop[11], Cancel[12])
 
 ################## MAPPING #######################  */
-
 
 const int node_input_max[] = {
   12, /* Max Input for Request */
@@ -273,10 +271,11 @@ SemaphoreHandle_t fingerSemaphore;
                               Enumeration  Definitions
 ******************************************************************************************/
 
-// Context enum for menu state
+// Context enum for menu state [Bluetooth Communication]
 enum Context {
   MAIN,
   MODE_MENU,
+  COMMAND_MENU,
   MANUAL_MENU,
   SELECTED_LIMB
 };

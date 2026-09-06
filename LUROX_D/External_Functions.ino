@@ -1,7 +1,7 @@
 /* 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2025
+                                    L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
@@ -481,13 +481,16 @@ void K210_Handle() {
   }
 }
 
+/****************************** Bluetooth Communication ***********************************/
+
 void Bluetooth_Handle() {
-  /******************************** COMMAND MAP ****************************************
-      |    RAW COMMANDS     |     OPTION     |    OPTIONS     |     OPTION    | 
-              MODE               STANDARD           CON             PARTY
-                                   SLEEP           MANUAL    
-  **************************************************************************************
-                  MANUAL MODE       |     LIMB       |      ANGLE
+  /******************************** COMMAND MAP *********************************************
+      |    RAW COMMANDS     |     OPTION     |    OPTION     |     OPTION    |    OPTION    |
+              MODE               STANDARD          MANUAL          SLEEP      
+  *******************************************************************************************
+             INPUTS               Request         Intention      Objective    Specification   
+  *******************************************************************************************
+                    MANUAL MODE       |     LIMB       |      ANGLE
   *************************************************************************************/
   if (newCommandReceived) {
     handleCommand(commandBuffer);
@@ -512,7 +515,7 @@ void handleCommand(char *cmd) {
   if (currentContext == MAIN) {
     if (strcmp(cmd, "MODE") == 0) {
       currentContext = MODE_MENU;
-      sendResponse("Select mode: STANDBY, AUTO, MANUAL");
+      sendResponse("Select mode: STANDARD, MANUAL, SLEEP");
     } else if (strcmp(cmd, "STATUS") == 0) {
       //sendStatus();
     } else {
@@ -523,19 +526,9 @@ void handleCommand(char *cmd) {
   else if (currentContext == MODE_MENU) {
     if (strcmp(cmd, "STANDARD") == 0) {
       GeneralMode = MODE_STANDARD;
-      sprintf(response, "Mode set to STANDARD");
+      sprintf(response, "Mode set to STANDARD, enter command: REQUEST, INTENTION, OBJECTIVE, SPECIFICATION");
       sendResponse(response);
-      currentContext = MAIN;
-    } else if (strcmp(cmd, "CON") == 0) {
-      GeneralMode = MODE_CON;
-      sprintf(response, "Mode set to CON");
-      sendResponse(response);
-      currentContext = MAIN;
-    } else if (strcmp(cmd, "PARTY") == 0) {
-      GeneralMode = MODE_PARTY;
-      sprintf(response, "Mode set to PARTY");
-      sendResponse(response);
-      currentContext = MAIN;
+      currentContext = COMMAND_MENU;
     } else if (strcmp(cmd, "MANUAL") == 0) {
       GeneralMode = MODE_MANUAL;
       sprintf(response, "Mode set to MANUAL");
@@ -547,33 +540,44 @@ void handleCommand(char *cmd) {
       sendResponse(response);
       currentContext = MAIN;
     } else {
-      sendResponse("Invalid mode. Use STANDBY, AUTO, MANUAL");
+      sendResponse("Invalid mode. Use STANDARD, MANUAL, SLEEP");
     }
+  } else if (currentContext == COMMAND_MENU) {
+    if (parseCommandSequence(cmd, &request, &intention, &specification, &objective)) {
+       // Success - use the values
+       sprintf(response, "Request: %d, Intention: %d, Specification: %d, Objective: %d",
+               request, intention, specification, objective);
+       sendResponse(response);
+
+    } else {
+        sendResponse("Invalid format. Enter 4 numbers separated by spaces (e.g., '1 3 0 3')");
+    }
+    
   } else if (currentContext == MANUAL_MENU) {
     if (strcmp(cmd, "L1") == 0) {
       selectedLimb = 0;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L1. Enter angle (0-270)");
+      sendResponse("Selected L1. Enter angle (115 - 155)");
     } else if (strcmp(cmd, "L2") == 0) {
       selectedLimb = 1;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L2. Enter angle (0-270)");
+      sendResponse("Selected L2. Enter angle (135 - 200)");
     } else if (strcmp(cmd, "L3") == 0) {
       selectedLimb = 2;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L3. Enter angle (0-270)");
+      sendResponse("Selected L3. Enter angle (0 - 270)");
     } else if (strcmp(cmd, "L4") == 0) {
       selectedLimb = 3;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L4. Enter angle (0-270)");
+      sendResponse("Selected L4. Enter angle (135 - 200)");
     } else if (strcmp(cmd, "L5") == 0) {
       selectedLimb = 4;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L5. Enter angle (0-180)");
+      sendResponse("Selected L5. Enter angle (30 - 240)");
     } else if (strcmp(cmd, "L6") == 0) {
       selectedLimb = 5;
       currentContext = SELECTED_LIMB;
-      sendResponse("Selected L6. Enter angle (0-180)");
+      sendResponse("Selected L6. Enter angle (30 - 110)");
     } else if (strcmp(cmd, "L6") == 0) {
       selectedLimb = 6;
       currentContext = SELECTED_LIMB;
@@ -583,7 +587,7 @@ void handleCommand(char *cmd) {
     }
   } else if (currentContext == SELECTED_LIMB) {
     int angle = atoi(cmd);
-    if (angle >= 0 && angle <= 180) {
+    if (angle >= 0 && angle <= 270) {
       switch (selectedLimb) {
         case 0:
           ArmRA[0] = (uint8_t)angle;
@@ -619,9 +623,14 @@ void handleCommand(char *cmd) {
       sendResponse(response);
       currentContext = MANUAL_MENU;
     } else {
-      sendResponse("Invalid angle. Enter 0-180");
+      sendResponse("Invalid angle. Enter 0-270");
     }
   }
+}
+
+bool parseCommandSequence(const char* input, int* request, int* intention, int* specification, int* objective) {
+    int count = sscanf(input, "%d %d %d %d", request, intention, specification, objective);
+    return (count == 4);
 }
 
 void sendResponse(const char *response) {
@@ -655,6 +664,8 @@ class MyCallbacks : public BLECharacteristicCallbacks {
     }
   }
 };
+
+/****************************** Serial Communication ***********************************/
 
 void Serial_Terminal() {
   if (Serial.available() > 0) {
