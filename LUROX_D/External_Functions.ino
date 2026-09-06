@@ -432,6 +432,7 @@ void K210_Handle() {
           else if (layer1_counter == 1) intent = b;
           else if (layer1_counter == 2) objective = b;
           else if (layer1_counter == 3) specification = b;
+          CMD_IN = true;  // Set the command input flag
           layer1_counter++;
         } else {
           if (b == 0x3) {                  // Layer 1 <CLOSE>
@@ -630,6 +631,7 @@ void handleCommand(char *cmd) {
 
 bool parseCommandSequence(const char* input, int* request, int* intention, int* specification, int* objective) {
     int count = sscanf(input, "%d %d %d %d", request, intention, specification, objective);
+    CMD_IN = true;
     return (count == 4);
 }
 

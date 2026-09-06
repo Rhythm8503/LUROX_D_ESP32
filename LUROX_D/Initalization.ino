@@ -14,6 +14,7 @@
 
 #define DEBUGSYS true
 #define i2C_EN true
+#define BUILD 1  // 1 Azami, 2 Ene, 3 Wim, 4 Ares
 
 void FreeRTOS_Initalization() {
   #if DEBUGSYS
