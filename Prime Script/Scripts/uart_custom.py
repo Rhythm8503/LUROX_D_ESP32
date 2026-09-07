@@ -58,13 +58,27 @@ class Comm:
     def UART_read(self):
         global request, intent, objective, specification, SpeechActive
         if self.uart.any():
-            data = self.uart.read(6)
-            if len(data) >= 6 and data[0] == 0x01 and data[5] == 0x03:
-                request = data[1]
-                intent = data[2]
-                objective = data[3]
-                specification = data[4]
-                return request, intent, objective, specification, SpeechActive
+            data = self.uart.read()
+            for byte in data:
+                if self.state == 0:  # WAITING_LAYER1
+                    if byte == 0x01:
+                        self.state = 1
+                        self.buffer = []
+                elif self.state == 1:  # READING_LAYER1
+                    if len(self.buffer) < 4:
+                        self.buffer.append(byte)
+                    else:
+                        if byte == 0x03:  # CLOSE
+                            Request = self.buffer[0]
+                            Intent = self.buffer[1]
+                            Objective = self.buffer[2]
+                            Specification = self.buffer[3]
+                            self.state = 0
+                            SpeechActive = False  # Switch to object mode
+                            return True
+                        else:
+                            self.state = 0  # Reset on error
+
         else:
             return None
 

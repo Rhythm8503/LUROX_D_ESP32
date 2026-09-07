@@ -99,6 +99,33 @@ class_to_token = {
     'scissor': 1200
 }
 
+CLASS_TO_OBJECTIVE = {  # Person was removed from the list but detected for future use.
+    0: 0,   # wallet -> Wallet[0]
+    1: 1,   # pliers -> Pliers[1]
+    2: 2,   # wrench -> Wrench[2]
+    3: 3,   # cup -> Cup[3]
+    4: 4,   # phone -> Phone[4]
+    5: 5,   # screwdriver -> Screwdrivers[5]
+    6: 6,   # scissor -> Scissors[6]
+    7: 7,   # drill -> Drill[7]
+    8: 8,   # hammer -> Hammer[8]
+    10: 9,  # can -> Can[9]
+    11: 10  # bottle -> Bottle[10]
+}
+
+COLOR_RANGES = { #Color ranges aligned with Specification
+    0:  [(200, 255), (0, 100), (0, 100)],    # Red
+    1:  [(200, 255), (100, 200), (0, 50)],   # Orange
+    2:  [(200, 255), (200, 255), (0, 50)],   # Yellow
+    3:  [(0, 100), (200, 255), (0, 100)],    # Green
+    4:  [(0, 50), (0, 50), (200, 255)],      # Blue
+    5:  [(150, 200), (0, 100), (150, 200)],  # Purple
+    6:  [(200, 255), (200, 255), (200, 255)], # White
+    7:  [(0, 50), (0, 50), (0, 50)],         # Black
+    8:  [(100, 150), (50, 100), (0, 50)],    # Brown
+    9:  [(100, 150), (100, 150), (100, 150)] # Grey
+}
+
 min_token = 100
 max_token = 1200
 f_max = 15
@@ -144,6 +171,78 @@ def initalize():
 #                           Object Detection
 #######################################################################
 
+def get_dominant_color(rect, img):
+    x, y, w, h = rect
+    center_x, center_y = x + w//2, y + h//2
+
+    # 16x16 sampling region (8 pixels in each direction from center)
+    sample_radius = 8
+    x1 = max(0, center_x - sample_radius)
+    y1 = max(0, center_y - sample_radius)
+    x2 = min(img.width() - 1, center_x + sample_radius)
+    y2 = min(img.height() - 1, center_y + sample_radius)
+
+    r_sum, g_sum, b_sum, count = 0, 0, 0, 0
+
+    # Sample every 2nd pixel for speed (8x8 = 64 samples instead of 256)
+    for py in range(y1, y2 + 1, 2):
+        for px in range(x1, x2 + 1, 2):
+            try:
+                pixel = img.get_pixel(px, py)
+                r = (pixel >> 11) & 0x1F
+                g = (pixel >> 5) & 0x3F
+                b = pixel & 0x1F
+                # Scale to 0-255
+                r = (r * 255) // 31
+                g = (g * 255) // 63
+                b = (b * 255) // 31
+                r_sum += r
+                g_sum += g
+                b_sum += b
+                count += 1
+            except:
+                pass
+
+    if count == 0:
+        return -1
+
+    r_avg = r_sum // count
+    g_avg = g_sum // count
+    b_avg = b_sum // count
+
+    # Match to color ranges
+    for color_idx, (r_range, g_range, b_range) in COLOR_RANGES.items():
+        if (r_range[0] <= r_avg <= r_range[1] and
+            g_range[0] <= g_avg <= g_range[1] and
+            b_range[0] <= b_avg <= b_range[1]):
+            return color_idx
+
+    return -1
+
+def obj_matches_filter(obj, img):
+    """Returns True if object matches current Specification + Objective"""
+    classid = obj.classid()
+    obj_code = CLASS_TO_OBJECTIVE.get(classid, -1)
+
+    # === COLOR FILTER (Specification 0-9) ===
+    if 0 <= Specification <= 9:
+        color_idx = get_dominant_color(obj.rect(), img)
+        if color_idx != Specification:
+            return False
+
+    # === OBJECT TYPE FILTER (Specification 10-20) ===
+    elif 10 <= Specification <= 20:
+        spec_obj_code = Specification - 10
+        if obj_code != spec_obj_code:
+            return False
+
+    # === OBJECTIVE FILTER (0-10) ===
+    if 0 <= Objective <= 10:  # Only filter if Objective is set
+        if obj_code != Objective:
+            return False
+
+    return True  # Passed all filters
+
 def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_size, lcd_rotation=0, sensor_hmirror=False, sensor_vflip=False):
     global next_id
     sensor.reset()
@@ -162,6 +261,8 @@ def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_
             img = sensor.snapshot()
             t = time.ticks_ms()
             objects = kpu.run_yolo2(task, img)
+            objects = [obj for obj in objects if obj_matches_filter(obj, img)]
+
             t = time.ticks_ms() - t
             new_detections = []
             if objects:
@@ -306,16 +407,15 @@ def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_
 def control_loop(state):
     while(True):
         current_time = utime.ticks_ms()
-        UART_read() # Constantly check for response from ESP32
+        UART_read()  # Check for UART Layer 1 Data
+        
         if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
             SpeechLayer = 0
             Layer0_Load() # Loading the HOME Layer!
             SpeechActive = True
-            Request = 0
-            Intent = 0
-            Objective = 0
-            Specification = 0
-        else: 
+            Request = Intent = Specification = Objective = 0
+
+        if UART_read():  # UART Layer 1 Data Received
             ObjectRec = True
             SpeechActive = False
 
@@ -457,18 +557,17 @@ def control_loop(state):
                             set_led_ring(brightness_values, color)
 
             elif SpeechLayer == 5: #Interrupt/Object loop
-            main(anchors = anchors, labels=labels, model_addr="/sd/model-192544.kmodel")
-            if sr.Done == sr.recognize():
-                res = sr.result()
-                if res != None:
-                    if 0 <= res[0] <= 3:
-                        SpeechLayer = 0
-                        ObjectRec = False
-                        Layer0_Load() # Return back to start!
-                        brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                        color = [50, 0, 0]  # Red color
-                        set_led_ring(brightness_values, color)
-                        UART_Layered_Comms(UARTLayer_1_Open, 100, 100, 100, 100, UARTLayer_1_Close) # Force Hand to HALT
+                if sr.Done == sr.recognize():
+                    res = sr.result()
+                    if res != None:
+                        if 0 <= res[0] <= 3:
+                            SpeechLayer = 0
+                            ObjectRec = False
+                            Layer0_Load() # Return back to start!
+                            brightness_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                            color = [50, 0, 0]  # Red color
+                            set_led_ring(brightness_values, color)
+                            UART_Layered_Comms(UARTLayer_1_Open, 100, 100, 100, 100, UARTLayer_1_Close) # Force Hand to HALT
 
 if __name__ == "__main__":
     init_state = initalize()
