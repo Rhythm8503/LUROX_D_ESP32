@@ -35,32 +35,38 @@ from fpioa_manager import fm
 class Comm:
     def __init__(self, uart):
         self.uart = uart
+        self.state = 0
+        self.buffer = []
+        self.layer1_data = [0, 0, 0, 0]  # request, intent, objective, specification
+        self.layer2_data = [0, 0, 0, 0]  # objX, objY, objW, objH
 
     def UART_Layered_Track(self, Open, track, Close):
-        msg = ""
-        msg = "{}:{}:{}:{}:{}:{}:{}".format(Open,
-                                            track['id'],
-                                            track['rect'][0],  # x
-                                            track['rect'][1],  # y
-                                            track['rect'][2],  # w
-                                            track['rect'][3],  # h
-                                            Close ) 
-        if msg:
-            msg = msg[:-2] + "\n"
-        self.uart.write(msg.encode())
+        x, y, w, h = track['rect']
+        msg = bytes([Open, x, y, w, h, Close])
+        self.uart.write(msg)
 
     def UART_Layered_Comms(self, Open, R, I, O, S, Close):
-        msg = ""
-        msg += "{}:{}:{}:{}:{}:{}, ".format(Open, R, I, O, S, Close)
-        if msg:
-            msg = msg[:-2] + "\n"
-        self.uart.write(msg.encode())
+        msg = bytes([Open, R, I, O, S, Close])
+        self.uart.write(msg)
 
     def UART_Test(self):
         msg = "UART_TEST"
         if msg:
             msg = msg[:-2] + "\n"
         self.uart.write(msg.encode())
+
+    def UART_read(self):
+        global request, intent, objective, specification, SpeechActive
+        if self.uart.any():
+            data = self.uart.read(6)
+            if len(data) >= 6 and data[0] == 0x01 and data[5] == 0x03:
+                request = data[1]
+                intent = data[2]
+                objective = data[3]
+                specification = data[4]
+                return request, intent, objective, specification, SpeechActive
+        else:
+            return None
 
 def init_uart():
     fm.register(15, fm.fpioa.UART1_TX, force=True)

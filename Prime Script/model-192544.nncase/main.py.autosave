@@ -96,9 +96,6 @@ def main(anchors, labels = None, model_addr="/sd/model-192544.kmodel", sensor_wi
                     img.draw_rectangle(pos)
                     img.draw_string(pos[0], pos[1], "%s : %.2f" %(labels[obj.classid()], obj.value()), scale=2, color=(255, 0, 0))
                 comm.send_detect_result(objects, labels)
-            img.draw_string(0, 200, "t:%dms" %(t), scale=2, color=(255, 0, 0))
-            img.draw_string(0, 2, "Upgrade to MaixCAM to use YOLOv8", scale=1.2, color=(255, 0, 0))
-            img.draw_string(0, 30, "wiki.sipeed.com/maixcam", scale=1.2, color=(255, 0, 0))
             lcd.display(img)
     except Exception as e:
         raise e
@@ -109,8 +106,8 @@ def main(anchors, labels = None, model_addr="/sd/model-192544.kmodel", sensor_wi
 
 if __name__ == "__main__":
     try:
-        main(anchors = anchors, labels=labels, model_addr=0x300000, lcd_rotation=0)
-        #main(anchors = anchors, labels=labels, model_addr="/sd/model-192544.kmodel")
+        #main(anchors = anchors, labels=labels, model_addr=0x300000, lcd_rotation=0)
+        main(anchors = anchors, labels=labels, model_addr="/sd/model-192544.kmodel")
     except Exception as e:
         sys.print_exception(e)
         lcd_show_except(e)

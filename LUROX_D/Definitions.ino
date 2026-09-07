@@ -177,7 +177,6 @@ uint8_t objX, objY, objW, objH; // Object XY and Box Size used to determine Desi
 char commandBuffer[32];         // Buffer for command parsing
 char originalCommand[32];       // Buffer to store original command for echo
 uint8_t selectedLimb = 0;      
-uint8_t request, intention, specification, objective; // Parsed command values
 
 /* ################################################################################################ */
 

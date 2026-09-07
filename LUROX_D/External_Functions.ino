@@ -482,6 +482,25 @@ void K210_Handle() {
   }
 }
 
+void K210_Write_Comm() {
+  /* Forward Bluetooth Command to K210 */
+    K210Serial.write(0x01); /* Open Layer 1 */
+    K210Serial.write(request);
+    K210Serial.write(intent);
+    K210Serial.write(objective);
+    K210Serial.write(specification);
+    K210Serial.write(0x03); /* Close Layer 1 */
+}
+
+void K210_Write_HALT() {
+    K210Serial.write(0x01); /* Open Layer 1 */
+    K210Serial.write(50);
+    K210Serial.write(50);
+    K210Serial.write(50);
+    K210Serial.write(50);
+    K210Serial.write(0x03); /* Close Layer 1 */
+}
+
 /****************************** Bluetooth Communication ***********************************/
 
 void Bluetooth_Handle() {
@@ -544,10 +563,10 @@ void handleCommand(char *cmd) {
       sendResponse("Invalid mode. Use STANDARD, MANUAL, SLEEP");
     }
   } else if (currentContext == COMMAND_MENU) {
-    if (parseCommandSequence(cmd, &request, &intention, &specification, &objective)) {
+    if (parseCommandSequence(cmd, &request, &intent, &specification, &objective)) {
        // Success - use the values
        sprintf(response, "Request: %d, Intention: %d, Specification: %d, Objective: %d",
-               request, intention, specification, objective);
+               request, intent, specification, objective);
        sendResponse(response);
 
     } else {
@@ -629,8 +648,8 @@ void handleCommand(char *cmd) {
   }
 }
 
-bool parseCommandSequence(const char* input, int* request, int* intention, int* specification, int* objective) {
-    int count = sscanf(input, "%d %d %d %d", request, intention, specification, objective);
+bool parseCommandSequence(const char* input, uint8_t* request_char, uint8_t* intention_char, uint8_t* specification_char, uint8_t* objective_char) {
+    int count = sscanf(input, "%d %d %d %d", request_char, intention_char, specification_char, objective_char);
     CMD_IN = true;
     return (count == 4);
 }

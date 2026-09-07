@@ -321,6 +321,7 @@ void Thumb_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
+      if (Gestures[0] > 0) {
       /* Pulse to Ensure Power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
       //Serial.println("Thumb Active Pulse");
@@ -332,6 +333,7 @@ void Thumb_Mot(void* pvParameters) {
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(10));
+      }
     }
   }
 }
@@ -363,6 +365,7 @@ void Index_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
+      if (Gestures[0] > 0) {
       /* Pulse to ensure power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
       //Serial.println("Index Active Pulse");
@@ -374,6 +377,7 @@ void Index_Mot(void* pvParameters) {
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(10));
+      }
     }
   }
 }
@@ -406,6 +410,7 @@ void Middle_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
+      if (Gestures[0] > 0) {
       /* Pulse to ensure power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
       //Serial.println("Middle Active Pulse");
@@ -417,6 +422,7 @@ void Middle_Mot(void* pvParameters) {
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(10));
+      }
     }
   }
 }
@@ -448,6 +454,7 @@ void Ring_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
+      if (Gestures[0] > 0) {
       /* Pulse to ensure Power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
       //Serial.println("Ring Active");
@@ -459,6 +466,7 @@ void Ring_Mot(void* pvParameters) {
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(10));
+      }
     }
   }
 }
@@ -489,6 +497,7 @@ void Pinky_Mot(void* pvParameters) {
       vTaskDelay(pdMS_TO_TICKS(200));
     }
     else {
+      if (Gestures[0] > 0) {
       /* Pulse to ensure power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
       //Serial.println("Pinky Active");
@@ -500,6 +509,7 @@ void Pinky_Mot(void* pvParameters) {
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(10));
+      }
     }
   }
 }
