@@ -74,7 +74,6 @@ class Comm:
                             Objective = self.buffer[2]
                             Specification = self.buffer[3]
                             self.state = 0
-                            SpeechActive = False  # Switch to object mode
                             return True
                         else:
                             self.state = 0  # Reset on error
