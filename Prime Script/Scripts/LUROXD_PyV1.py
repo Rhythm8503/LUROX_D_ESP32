@@ -85,18 +85,18 @@ labels = ['wallet', 'pliers', 'wrench', 'cup', 'phone', 'screwdriver', 'scissor'
 anchors = [1.31, 3.16, 2.56, 5.34, 5.7, 4.92, 0.94, 1.16, 2.81, 2.25]
 
 class_to_token = {
-    'person': 100,
-    'phone': 200,
-    'wallet': 300,
-    'cup': 400,
-    'bottle': 500,
-    'can': 600,
-    'hammer': 700,
-    'drill': 800,
-    'screwdriver': 900,
-    'wrench': 1000,
-    'pliers': 1100,
-    'scissor': 1200
+    'wallet':      100,
+    'pliers':      200,
+    'wrench':      250,
+    'cup':         400,
+    'phone':       500,
+    'screwdriver': 600,
+    'scissor':     700,
+    'drill':       800,
+    'hammer':      900,
+    'person':     1000,
+    'can':        1100,   
+    'bottle':     1150, 
 }
 
 CLASS_TO_OBJECTIVE = {  # Person was removed from the list but detected for future use.
@@ -142,6 +142,8 @@ SpeechActive = True
 ESPConnected = False
 sensor_hmirror=False
 sensor_vflip=False
+kpu_task = None         
+kpu_ready = False
 
 #######################################################################
 #                         FPIOA Initalization
@@ -173,6 +175,29 @@ def CV_Init():
     sensor.set_saturation(+2)
     sensor.set_auto_gain(1)
     sensor.run(1)
+
+def kpu_session_begin(model_addr):
+    global kpu_task, kpu_ready
+    if kpu_ready:
+        return True          # already loaded — don't re-load
+    try:
+        kpu_task = kpu.load(model_addr)          # ← FIX #1
+        kpu.init_yolo2(kpu_task, 0.5, 0.3, 5, anchors)
+        kpu_ready = True
+        gc.collect()
+        return True
+    except Exception as e:
+        kpu_task = None
+        kpu_ready = False
+        raise e
+
+def kpu_session_end():
+    global kpu_task, kpu_ready
+    if kpu_ready and kpu_task is not None:
+        kpu.deinit(kpu_task)        # ← FIX #1
+        kpu_task  = None
+        kpu_ready = False
+        gc.collect()
 
 #######################################################################
 #                       Function Initalization
@@ -264,165 +289,179 @@ def obj_matches_filter(obj, img):
 
     return True  # Passed all filters
 
-def main(anchors, labels = None, model_addr="/sd/m.kmodel"):
-    global next_id
+def main(anchors, labels):
+    global next_id, tracked_objects 
+
+    if not kpu_ready or kpu_task is None: # Waiting for K210 to Load
+        return img, [] 
+
+    img = sensor.snapshot()
+    t = time.ticks_ms()
 
     try:
-        task = None
-        task = kpu.load(model_addr)
-        kpu.init_yolo2(task, 0.5, 0.3, 5, anchors) # threshold:[0,1], nms_value: [0, 1]
-        if ObjectRec == True:
-            img = sensor.snapshot()
-            t = time.ticks_ms()
-            objects = kpu.run_yolo2(task, img)
-            objects = [obj for obj in objects if obj_matches_filter(obj, img)]
+        raw_objects = kpu.run_yolo2(kpu_task, img)
+    except Exception:
+        return img, []
 
-            t = time.ticks_ms() - t
-            new_detections = []
-            if objects:
-                for obj in objects:
-                    rect = obj.rect()
-                    x_norm = (rect[0] + rect[2] / 2) / 224
-                    y_norm = (rect[1] + rect[3] / 2) / 224
-                    a_norm = (rect[2] * rect[3]) / 50176
-                    new_detections.append({
-                        'rect': rect,
-                        'X': x_norm,
-                        'Y': y_norm,
-                        'A': a_norm,
-                        'classid': obj.classid(),
-                        'P': obj.value()
-                    })
-                    img.draw_rectangle(rect)
-                    img.draw_string(rect[0], rect[1], "%s : %.2f" %(labels[obj.classid()], obj.value()), scale=2, color=(255, 0, 0))
-                    
+    elapsed = utime.ticks_ms() - t
+    objects = [obj for obj in raw_objects if obj_matches_filter(obj, img)]
 
-                # Update f for all tracks
-                for track in tracked_objects:
-                    while track['detection_times'] and current_time - track['detection_times'][0] > 500:
-                        track['detection_times'].pop(0)
-                    track['f'] = len(track['detection_times'])
+    new_detections = []
+    for obj in objects:
+        rect    = obj.rect()
+        x_norm  = (rect[0] + rect[2] / 2.0) / 224.0
+        y_norm  = (rect[1] + rect[3] / 2.0) / 224.0
+        a_norm  = (rect[2] * rect[3]) / 50176.0
+        new_detections.append({
+            'rect':    rect,
+            'X':       x_norm,
+            'Y':       y_norm,
+            'A':       a_norm,
+            'classid': obj.classid(),
+            'P':       obj.value(),
+        })
 
-                matched_tracks = []
-                for det in new_detections:
-                    min_dist = float('inf') # Infite Error at first
-                    best_track = None
-
-                    # Raw pixel center of detection
-                    center_x_det = det['rect'][0] + det['rect'][2] / 2
-                    center_y_det = det['rect'][1] + det['rect'][3] / 2
-
-                    # Class token and normalized [0,1]
-                    token_det = class_to_token[labels[det['classid']]]
-                    norm_c_det = (token_det - min_token) / (max_token - min_token)
-                    norm_f_det = 1 / f_max
-
-                    v_det = [
-                        det['rect'][0] / 224,
-                        det['rect'][1] / 224,
-                        det['rect'][2] / 224,
-                        det['rect'][3] / 224,
-
-                        norm_c_det,
-                        norm_f_det,
-
-                        det['P']
-                    ]
-
-                    for track in tracked_objects:
-                        if track['missed_frames'] > 0:
-                            continue
-
-                        center_x_track = track['rect'][0] + track['rect'][2] / 2
-                        center_y_track = track['rect'][1] + track['rect'][3] / 2
-
-                        center_dist = math.sqrt((center_x_det - center_x_track)**2 + (center_y_det - center_y_track)**2)
-
-                        if center_dist < 30:
-                            token_track = class_to_token[labels[track['classid']]]
-                            norm_c_track = (token_track - min_token) / (max_token - min_token)
-                            norm_f_track = track['f'] / f_max
-
-                            v_track = [
-                                track['rect'][0] / 224,
-                                track['rect'][1] / 224,
-                                track['rect'][2] / 224,
-                                track['rect'][3] / 224,
-                                norm_c_track,
-                                norm_f_track,
-                                track['P']
-                            ]
-
-                            dist = distance(v_det, v_track)
-                            if dist < min_dist:
-                                min_dist = dist
-                                best_track = track
-
-                    if best_track is not None and min_dist < 0.1:
-                        # Update existing track
-                        best_track['rect'] = det['rect']
-                        best_track['X'] = det['X']
-                        best_track['Y'] = det['Y']
-                        best_track['A'] = det['A']
-                        best_track['P'] = det['P']
-
-                        token_diff = abs(token_det - class_to_token[labels[best_track['classid']]])
-                        if det['P'] > 0.95 or (token_diff < 200 and det['P'] > best_track['P'] + 0.1):
-                            best_track['classid'] = det['classid']
-
-                        best_track['detection_times'].append(current_time)
-                        best_track['f'] = len(best_track['detection_times'])
-                        best_track['R'] += 1
-                        best_track['missed_frames'] = 0
-                        matched_tracks.append(best_track)
-                else:
-                    # New object
-                    new_track = {
-                        'id': next_id,
-                        'rect': det['rect'],
-                        'X': det['X'],
-                        'Y': det['Y'],
-                        'classid': det['classid'],
-                        'P': det['P'],
-                        'R': 1,
-                        'detection_times': [current_time],
-                        'f': 1,
-                        'missed_frames': 0
-                    }
-                    tracked_objects.append(new_track)
-                    matched_tracks.append(new_track)
-                    next_id += 1
-
-                # Update unmatched tracks
-                for track in tracked_objects[:]:
-                    if track not in matched_tracks:
-                        track['missed_frames'] += 1
-                        if track['missed_frames'] > 5:
-                            tracked_objects.remove(track)
-
-                for track in tracked_objects:
-                   if track['missed_frames'] <= 4:
-                        Track_nothing = 1
-                        #comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close)
-
+    # ── Age out old detection timestamps ─────
+    current_time = utime.ticks_ms()      # ← FIX #2
+    for track in tracked_objects:
+        while track['detection_times']:
+            if current_time - track['detection_times'][0] > 500:
+                track['detection_times'].pop(0)
             else:
-                # No detections; update tracks
-                for track in tracked_objects[:]:
-                    track['missed_frames'] += 1
-                    if track['missed_frames'] > 5:
-                        tracked_objects.remove(track)
+                break
+        track['f'] = len(track['detection_times'])
 
-    except Exception as e:
-        raise e
-    finally:
-        if not task is None:
-            kpu.deinit(task)
+    # ── ANN matching ─────────────────────────
+    matched_tracks = []
+
+    for det in new_detections:
+        min_dist   = float('inf')
+        best_track = None
+
+        # Spatial gate
+        cx_det = det['rect'][0] + det['rect'][2] / 2.0
+        cy_det = det['rect'][1] + det['rect'][3] / 2.0
+
+        token_det   = class_to_token.get(labels[det['classid']], 600)
+        norm_c_det  = (token_det - min_token) / (max_token - min_token)
+        norm_f_det  = 1.0 / f_max
+
+        v_det = [
+            det['rect'][0] / 224.0,
+            det['rect'][1] / 224.0,
+            det['rect'][2] / 224.0,
+            det['rect'][3] / 224.0,
+            norm_c_det,
+            norm_f_det,
+            det['P'],
+        ]
+
+        for track in tracked_objects:
+            if track['missed_frames'] > 4:
+                continue
+
+            cx_trk = track['rect'][0] + track['rect'][2] / 2.0
+            cy_trk = track['rect'][1] + track['rect'][3] / 2.0
+            center_dist = math.sqrt((cx_det - cx_trk)**2 + (cy_det - cy_trk)**2)
+
+            if center_dist >= 30:
+                continue          # spatial gate failed
+
+            token_trk    = class_to_token.get(labels[track['classid']], 600)
+            norm_c_trk   = (token_trk - min_token) / (max_token - min_token)
+            norm_f_trk   = track['f'] / f_max
+
+            v_trk = [
+                track['rect'][0] / 224.0,
+                track['rect'][1] / 224.0,
+                track['rect'][2] / 224.0,
+                track['rect'][3] / 224.0,
+                norm_c_trk,
+                norm_f_trk,
+                track['P'],
+            ]
+
+            dist = distance(v_det, v_trk)
+            if dist < min_dist:
+                min_dist   = dist
+                best_track = track
+
+        # ← FIX #6:  "else" now correctly pairs with the "if"
+        if best_track is not None and min_dist < 0.1:
+            # ── Update existing track ──
+            best_track['rect']  = det['rect']
+            best_track['X']     = det['X']
+            best_track['Y']     = det['Y']
+            best_track['A']     = det['A']
+            best_track['P']     = det['P']
+
+            # Class-switch hysteresis
+            token_diff = abs(token_det - class_to_token.get(
+                labels[best_track['classid']], 600))
+            if det['P'] > 0.95 or (token_diff < 200 and
+                    det['P'] > best_track['P'] + 0.1):
+                best_track['classid'] = det['classid']
+
+            best_track['detection_times'].append(current_time)
+            best_track['f']             = len(best_track['detection_times'])
+            best_track['R']            += 1
+            best_track['missed_frames'] = 0
+            matched_tracks.append(best_track)
+
+        else:
+            # ── New track ──
+            new_track = {
+                'id':            next_id,
+                'rect':          det['rect'],
+                'X':             det['X'],
+                'Y':             det['Y'],
+                'classid':       det['classid'],
+                'P':             det['P'],
+                'R':             1,
+                'detection_times':[current_time],
+                'f':             1,
+                'missed_frames': 0,
+            }
+            tracked_objects.append(new_track)
+            matched_tracks.append(new_track)
+            next_id += 1
+
+    # ── Age unmatched tracks ─────────────────
+    for track in tracked_objects[:]:
+        if track not in matched_tracks:
+            track['missed_frames'] += 1
+            if track['missed_frames'] > 5:
+                tracked_objects.remove(track)
+
+    # ── ← FIX #7:  DRAW tracked / locked objects ──
+    #     All detections  →  thin blue box
+    #     Locked tracks   →  thick green box + label
+    for det in new_detections:
+        r = det['rect']
+        img.draw_rectangle(r, color=(0, 0, 255), thickness=1)
+
+    locked_count = 0
+    for track in tracked_objects:
+        if track['missed_frames'] <= 4 and track['R'] >= 3:
+            r = track['rect']
+            img.draw_rectangle(r, color=(0, 255, 0), thickness=2)
+            lbl = "%s  P=%.2f  R=%d" % (
+                labels[track['classid']], track['P'], track['R'])
+            img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
+            locked_count += 1
+            #comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
+
+    return img, locked_count
 
 #######################################################################
 #                           Control Loop
 #######################################################################
 
 def control_loop(state):
+    # Function Variables
+    model_addr="/sd/model-192544.kmodel"
+    was_active = False 
+
     while(True):
         current_time = utime.ticks_ms()
         #if comm.UART_read():  # Check for UART Layer 1 Data
@@ -435,8 +474,18 @@ def control_loop(state):
                 #ObjectRec = True
                 #SpeechActive = False
 
-        if (ObjectRec == True):
-            main(anchors = anchors, labels=labels, model_addr="/sd/model-192544.kmodel")
+        if ObjectRec and not was_active:
+            kpu_session_begin(model_addr)
+            was_active = True
+
+        elif not ObjectRec and was_active:
+            kpu_session_end()
+            tracked_objects.clear()
+            next_id = 0
+            was_active = False
+
+        if ObjectRec and kpu_ready: 
+            img, locked = main(anchors, labels)   
 
         # Disable for now
         # if (SpeechActive == True):
