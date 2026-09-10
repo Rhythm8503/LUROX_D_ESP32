@@ -568,8 +568,9 @@ void handleCommand(char *cmd) {
        sprintf(response, "Request: %d, Intention: %d, Specification: %d, Objective: %d",
                request, intent, specification, objective);
        sendResponse(response);
-
-    } else {
+       K210_Write_Comm();
+    } 
+    else {
         sendResponse("Invalid format. Enter 4 numbers separated by spaces (e.g., '1 3 0 3')");
     }
     
