@@ -202,6 +202,7 @@ void Halt_Function() {
   #endif
   /* Move to Pose Position */
   Extended_Position();
+  K210_Write_HALT(); /* Force Halt, even if the instruction came from the K210 */
 }
 
 void Gesture_Function(int req_ges, int int_ges) {

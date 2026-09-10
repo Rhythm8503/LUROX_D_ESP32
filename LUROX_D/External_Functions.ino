@@ -569,6 +569,7 @@ void handleCommand(char *cmd) {
                request, intent, specification, objective);
        sendResponse(response);
        K210_Write_Comm();
+       CMD_IN = true;
     } 
     else {
         sendResponse("Invalid format. Enter 4 numbers separated by spaces (e.g., '1 3 0 3')");
