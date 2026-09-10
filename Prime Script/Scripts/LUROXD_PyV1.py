@@ -16,7 +16,7 @@ import time
 import utime
 from Maix import I2S, GPIO
 from fpioa_manager import fm
-import sensor, image, lcd
+import sensor, image
 import array
 import math
 import struct
@@ -140,6 +140,8 @@ SpeechInterrupt = False
 ObjectRec = False
 SpeechActive = True
 ESPConnected = False
+sensor_hmirror=False
+sensor_vflip=False
 
 #######################################################################
 #                         FPIOA Initalization
@@ -157,15 +159,33 @@ sr = isolated_word(dmac=2, i2s=I2S.DEVICE_0, size=15, shift=1) # maix bit set sh
 sr.set_threshold(150, 150, 9800)
 
 #######################################################################
+#                      Camera & YOLO Initalization
+#######################################################################
+def CV_Init():
+    sensor.reset(freq=22000000)
+    sensor.set_pixformat(sensor.RGB565)
+    sensor.set_framesize(sensor.QVGA)
+    sensor.set_windowing(input_size)
+    sensor.set_hmirror(sensor_hmirror)
+    sensor.set_vflip(sensor_vflip)
+    sensor.set_contrast(+2)
+    sensor.set_brightness(+2)
+    sensor.set_saturation(+2)
+    sensor.set_auto_gain(1)
+    sensor.run(1)
+
+#######################################################################
 #                       Function Initalization
 #######################################################################
 def initalize():
     #global comm
     #uart = init_uart()
     #comm = Comm(uart)
-    sk9822_init()
+
+    sk9822_init() 
     #Layer0_Load()
 
+    CV_Init() 
     return {"status": "ready"}
 
 #######################################################################
@@ -244,19 +264,8 @@ def obj_matches_filter(obj, img):
 
     return True  # Passed all filters
 
-def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_size, lcd_rotation=0, sensor_hmirror=False, sensor_vflip=False):
+def main(anchors, labels = None, model_addr="/sd/m.kmodel"):
     global next_id
-    sensor.reset(freq=22000000)
-    sensor.set_pixformat(sensor.RGB565)
-    sensor.set_framesize(sensor.QVGA)
-    sensor.set_windowing(sensor_window)
-    sensor.set_hmirror(sensor_hmirror)
-    sensor.set_vflip(sensor_vflip)
-    sensor.set_contrast(+2)
-    sensor.set_brightness(+2)
-    sensor.set_saturation(+2)
-    sensor.set_auto_gain(1)
-    sensor.run(1)
 
     try:
         task = None
@@ -402,8 +411,6 @@ def main(anchors, labels = None, model_addr="/sd/m.kmodel", sensor_window=input_
                     track['missed_frames'] += 1
                     if track['missed_frames'] > 5:
                         tracked_objects.remove(track)
-
-            lcd.display(img)
 
     except Exception as e:
         raise e
