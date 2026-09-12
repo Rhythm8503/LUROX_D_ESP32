@@ -45,9 +45,9 @@ print("sys.path now includes:", sys.path)
 #from speechrec_custom import Layer4_Load
 #from speechrec_custom import Interrupt_Load
 
-import uart_custom
-from uart_custom import Comm
-from uart_custom import init_uart
+#import uart_custom
+#from uart_custom import Comm
+#from uart_custom import init_uart
 #from uart_custom import UART_Layered_Track
 #from uart_custom import UART_Layered_Comms
 #from uart_custom import UART_read
@@ -64,7 +64,7 @@ from sk9822_custom import set_led_ring
 SpeechLayer = 0
 Request = 0
 Intent = 0
-Objective = 0
+Objective = 3
 Specification = 0
 
 sample_rate   = 26000
@@ -95,8 +95,8 @@ class_to_token = {
     'drill':       800,
     'hammer':      900,
     'person':     1000,
-    'can':        1100,   
-    'bottle':     1150, 
+    'can':        1100,
+    'bottle':     1150,
 }
 
 CLASS_TO_OBJECTIVE = {  # Person was removed from the list but detected for future use.
@@ -120,7 +120,7 @@ COLOR_RANGES = { #Color ranges aligned with Specification
     3:  [(0, 100), (200, 255), (0, 100)],    # Green
     4:  [(0, 50), (0, 50), (200, 255)],      # Blue
     5:  [(150, 200), (0, 100), (150, 200)],  # Purple
-    6:  [(200, 255), (200, 255), (200, 255)], # White
+    6:  [(200, 255), (200, 255), (200, 255)],# White
     7:  [(0, 50), (0, 50), (0, 50)],         # Black
     8:  [(100, 150), (50, 100), (0, 50)],    # Brown
     9:  [(100, 150), (100, 150), (100, 150)] # Grey
@@ -137,12 +137,12 @@ def distance(p1, p2):
 
 # Semaphores / Flags
 SpeechInterrupt = False
-ObjectRec = False
+ObjectRec = True
 SpeechActive = True
 ESPConnected = False
 sensor_hmirror=False
 sensor_vflip=False
-kpu_task = None         
+kpu_task = None
 kpu_ready = False
 
 #######################################################################
@@ -164,16 +164,20 @@ sr.set_threshold(150, 150, 9800)
 #                      Camera & YOLO Initalization
 #######################################################################
 def CV_Init():
-    sensor.reset(freq=22000000)
+    sensor.reset(freq=24000000)
     sensor.set_pixformat(sensor.RGB565)
     sensor.set_framesize(sensor.QVGA)
+    #sensor.skip_frames(time=2000)
     sensor.set_windowing(input_size)
     sensor.set_hmirror(sensor_hmirror)
     sensor.set_vflip(sensor_vflip)
-    sensor.set_contrast(+2)
-    sensor.set_brightness(+2)
-    sensor.set_saturation(+2)
-    sensor.set_auto_gain(1)
+    #sensor.set_contrast(+2)
+    #sensor.set_brightness(+2)
+    #sensor.set_saturation(+2)
+    #sensor.set_auto_gain(1)
+    #current_val = sensor.__read_reg(0x4740)
+    #sensor.__write_reg(0x4740, current_val ^ 0x20)
+    #sensor.__write_reg(0x3018, 0x00)
     sensor.run(1)
 
 def kpu_session_begin(model_addr):
@@ -182,7 +186,7 @@ def kpu_session_begin(model_addr):
         return True          # already loaded — don't re-load
     try:
         kpu_task = kpu.load(model_addr)          # ← FIX #1
-        kpu.init_yolo2(kpu_task, 0.5, 0.3, 5, anchors)
+        kpu.init_yolo2(kpu_task, 0.2, 0.2, 5, anchors)
         kpu_ready = True
         gc.collect()
         return True
@@ -207,10 +211,10 @@ def initalize():
     #uart = init_uart()
     #comm = Comm(uart)
 
-    sk9822_init() 
+    sk9822_init()
     #Layer0_Load()
 
-    CV_Init() 
+    CV_Init()
     return {"status": "ready"}
 
 #######################################################################
@@ -248,65 +252,56 @@ def get_dominant_color(rect, img):
                 count += 1
             except:
                 pass
-
     if count == 0:
         return -1
-
     r_avg = r_sum // count
     g_avg = g_sum // count
     b_avg = b_sum // count
-
     # Match to color ranges
     for color_idx, (r_range, g_range, b_range) in COLOR_RANGES.items():
         if (r_range[0] <= r_avg <= r_range[1] and
             g_range[0] <= g_avg <= g_range[1] and
             b_range[0] <= b_avg <= b_range[1]):
             return color_idx
-
     return -1
 
 def obj_matches_filter(obj, img):
     """Returns True if object matches current Specification + Objective"""
     classid = obj.classid()
     obj_code = CLASS_TO_OBJECTIVE.get(classid, -1)
-
     # === COLOR FILTER (Specification 0-9) ===
     if 0 <= Specification <= 9:
         color_idx = get_dominant_color(obj.rect(), img)
         if color_idx != Specification:
             return False
-
     # === OBJECT TYPE FILTER (Specification 10-20) ===
     elif 10 <= Specification <= 20:
         spec_obj_code = Specification - 10
         if obj_code != spec_obj_code:
             return False
-
     # === OBJECTIVE FILTER (0-10) ===
     if 0 <= Objective <= 10:  # Only filter if Objective is set
         if obj_code != Objective:
             return False
-
     return True  # Passed all filters
 
 def main(anchors, labels):
-    global next_id, tracked_objects 
+    global next_id, tracked_objects
 
     if not kpu_ready or kpu_task is None: # Waiting for K210 to Load
-        return img, [] 
-
+        return img, []
     img = sensor.snapshot()
     t = time.ticks_ms()
 
     try:
-        raw_objects = kpu.run_yolo2(kpu_task, img)
+        raw_objects = kpu.run_yolo2(kpu_task, img) or []
     except Exception:
         return img, []
 
     elapsed = utime.ticks_ms() - t
     objects = [obj for obj in raw_objects if obj_matches_filter(obj, img)]
-
     new_detections = []
+
     for obj in objects:
         rect    = obj.rect()
         x_norm  = (rect[0] + rect[2] / 2.0) / 224.0
@@ -333,7 +328,6 @@ def main(anchors, labels):
 
     # ── ANN matching ─────────────────────────
     matched_tracks = []
-
     for det in new_detections:
         min_dist   = float('inf')
         best_track = None
@@ -341,7 +335,6 @@ def main(anchors, labels):
         # Spatial gate
         cx_det = det['rect'][0] + det['rect'][2] / 2.0
         cy_det = det['rect'][1] + det['rect'][3] / 2.0
-
         token_det   = class_to_token.get(labels[det['classid']], 600)
         norm_c_det  = (token_det - min_token) / (max_token - min_token)
         norm_f_det  = 1.0 / f_max
@@ -359,18 +352,14 @@ def main(anchors, labels):
         for track in tracked_objects:
             if track['missed_frames'] > 4:
                 continue
-
             cx_trk = track['rect'][0] + track['rect'][2] / 2.0
             cy_trk = track['rect'][1] + track['rect'][3] / 2.0
             center_dist = math.sqrt((cx_det - cx_trk)**2 + (cy_det - cy_trk)**2)
-
             if center_dist >= 30:
                 continue          # spatial gate failed
-
             token_trk    = class_to_token.get(labels[track['classid']], 600)
             norm_c_trk   = (token_trk - min_token) / (max_token - min_token)
             norm_f_trk   = track['f'] / f_max
-
             v_trk = [
                 track['rect'][0] / 224.0,
                 track['rect'][1] / 224.0,
@@ -380,13 +369,13 @@ def main(anchors, labels):
                 norm_f_trk,
                 track['P'],
             ]
-
             dist = distance(v_det, v_trk)
             if dist < min_dist:
                 min_dist   = dist
                 best_track = track
 
         # ← FIX #6:  "else" now correctly pairs with the "if"
+
         if best_track is not None and min_dist < 0.1:
             # ── Update existing track ──
             best_track['rect']  = det['rect']
@@ -394,14 +383,12 @@ def main(anchors, labels):
             best_track['Y']     = det['Y']
             best_track['A']     = det['A']
             best_track['P']     = det['P']
-
             # Class-switch hysteresis
             token_diff = abs(token_det - class_to_token.get(
                 labels[best_track['classid']], 600))
             if det['P'] > 0.95 or (token_diff < 200 and
                     det['P'] > best_track['P'] + 0.1):
                 best_track['classid'] = det['classid']
-
             best_track['detection_times'].append(current_time)
             best_track['f']             = len(best_track['detection_times'])
             best_track['R']            += 1
@@ -427,6 +414,7 @@ def main(anchors, labels):
             next_id += 1
 
     # ── Age unmatched tracks ─────────────────
+
     for track in tracked_objects[:]:
         if track not in matched_tracks:
             track['missed_frames'] += 1
@@ -436,11 +424,12 @@ def main(anchors, labels):
     # ── ← FIX #7:  DRAW tracked / locked objects ──
     #     All detections  →  thin blue box
     #     Locked tracks   →  thick green box + label
+
     for det in new_detections:
         r = det['rect']
         img.draw_rectangle(r, color=(0, 0, 255), thickness=1)
-
     locked_count = 0
+
     for track in tracked_objects:
         if track['missed_frames'] <= 4 and track['R'] >= 3:
             r = track['rect']
@@ -450,7 +439,6 @@ def main(anchors, labels):
             img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
             locked_count += 1
             #comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
-
     return img, locked_count
 
 #######################################################################
@@ -460,7 +448,7 @@ def main(anchors, labels):
 def control_loop(state):
     # Function Variables
     model_addr="/sd/model-192544.kmodel"
-    was_active = False 
+    was_active = False
 
     while(True):
         current_time = utime.ticks_ms()
@@ -484,8 +472,8 @@ def control_loop(state):
             next_id = 0
             was_active = False
 
-        if ObjectRec and kpu_ready: 
-            img, locked = main(anchors, labels)   
+        if ObjectRec and kpu_ready:
+            img, locked = main(anchors, labels)
 
         # Disable for now
         # if (SpeechActive == True):
