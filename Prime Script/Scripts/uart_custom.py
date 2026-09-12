@@ -32,7 +32,7 @@ from fpioa_manager import fm
 ################## MAPPING #######################
 
 
-class Comm:
+class comm:
     def __init__(self, uart):
         self.uart = uart
         self.state = 0

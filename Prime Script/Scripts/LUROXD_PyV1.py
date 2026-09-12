@@ -45,9 +45,9 @@ print("sys.path now includes:", sys.path)
 #from speechrec_custom import Layer4_Load
 #from speechrec_custom import Interrupt_Load
 
-#import uart_custom
-#from uart_custom import Comm
-#from uart_custom import init_uart
+import uart_custom
+from uart_custom import comm
+from uart_custom import init_uart
 #from uart_custom import UART_Layered_Track
 #from uart_custom import UART_Layered_Comms
 #from uart_custom import UART_read
@@ -64,8 +64,8 @@ from sk9822_custom import set_led_ring
 SpeechLayer = 0
 Request = 0
 Intent = 0
-Objective = 3
-Specification = 0
+Objective = 0
+Specification = 10
 
 sample_rate   = 26000
 record_time   = 2  #s
@@ -157,7 +157,7 @@ rx = I2S(I2S.DEVICE_0)
 rx.channel_config(rx.CHANNEL_0, rx.RECEIVER, align_mode=I2S.STANDARD_MODE)
 rx.set_sample_rate(sample_rate)
 
-sr = isolated_word(dmac=2, i2s=I2S.DEVICE_0, size=15, shift=1) # maix bit set shift=1
+sr = isolated_word(dmac=2, i2s=I2S.DEVICE_0, size=35, shift=1) # maix bit set shift=1
 sr.set_threshold(150, 150, 9800)
 
 #######################################################################
@@ -186,7 +186,7 @@ def kpu_session_begin(model_addr):
         return True          # already loaded — don't re-load
     try:
         kpu_task = kpu.load(model_addr)          # ← FIX #1
-        kpu.init_yolo2(kpu_task, 0.2, 0.2, 5, anchors)
+        kpu.init_yolo2(kpu_task, 0.3, 0.3, 5, anchors)
         kpu_ready = True
         gc.collect()
         return True
@@ -207,10 +207,9 @@ def kpu_session_end():
 #                       Function Initalization
 #######################################################################
 def initalize():
-    #global comm
-    #uart = init_uart()
-    #comm = Comm(uart)
-
+    global comm
+    uart = init_uart()
+    comm = comm(uart)
     sk9822_init()
     #Layer0_Load()
 
@@ -275,13 +274,13 @@ def obj_matches_filter(obj, img):
         color_idx = get_dominant_color(obj.rect(), img)
         if color_idx != Specification:
             return False
-        
+
     # === OBJECT TYPE FILTER (Specification 10-20) ===
     elif 10 <= Specification <= 20: # Specification acting as Objective
         spec_obj_code = Specification - 10
         if obj_code != spec_obj_code:
             return False
-        
+
     # === OBJECTIVE FILTER (0-10) ===
     if 0 <= Objective <= 10:  # Only filter if Objective is set
         if obj_code != Objective:
@@ -302,10 +301,10 @@ def main(anchors, labels):
         return img, []
 
     elapsed = utime.ticks_ms() - t
-    objects = [obj for obj in raw_objects if obj_matches_filter(obj, img)]
-    new_detections = []
+    #objects = [obj for obj in raw_objects if obj_matches_filter(obj, img)]
 
-    for obj in objects:
+    new_detections = []
+    for obj in raw_objects:
         rect    = obj.rect()
         x_norm  = (rect[0] + rect[2] / 2.0) / 224.0
         y_norm  = (rect[1] + rect[3] / 2.0) / 224.0
@@ -433,15 +432,41 @@ def main(anchors, labels):
         img.draw_rectangle(r, color=(0, 0, 255), thickness=1)
     locked_count = 0
 
+    filtered_tracks = []
     for track in tracked_objects:
         if track['missed_frames'] <= 4 and track['R'] >= 3:
-            r = track['rect']
-            img.draw_rectangle(r, color=(0, 255, 0), thickness=2)
-            lbl = "%s  P=%.2f  R=%d" % (
-                labels[track['classid']], track['P'], track['R'])
-            img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
-            locked_count += 1
-            #comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
+            classid = track['classid']
+            obj_code = CLASS_TO_OBJECTIVE.get(classid, -1)
+
+            # === COLOR FILTER (Specification 0-9) ===
+            if (0 <= Specification <= 9) and (0 <= Objective <= 10):
+                color_idx = get_dominant_color(track['rect'], img)
+                if color_idx != Specification:
+                    continue
+
+            # === OBJECT TYPE FILTER (Specification 10-20) ===
+            elif 10 <= Specification <= 20:
+                spec_obj_code = Specification - 10
+                if obj_code != spec_obj_code:
+                    continue
+
+            # === OBJECTIVE FILTER (0-10) ===
+            if 0 <= Objective <= 10:
+                if obj_code != Objective:
+                    continue
+
+            filtered_tracks.append(track)
+
+    for track in filtered_tracks:
+        r = track['rect']
+        img.draw_rectangle(r, color=(0, 255, 0), thickness=2)
+        lbl = "%s  P=%.2f  R=%d" % (
+            labels[track['classid']], track['P'], track['R'])
+        img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
+        locked_count += 1
+        print(track['X'], track['Y'], track['id'])
+        comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
+
     return img, locked_count
 
 #######################################################################
@@ -450,11 +475,13 @@ def main(anchors, labels):
 
 def control_loop(state):
     # Function Variables
+    global ObjectRec, was_active, Request, Intent, Objective, Specification, SpeechLayer, SpeechActive
     model_addr="/sd/model-192544.kmodel"
     was_active = False
 
     while(True):
         current_time = utime.ticks_ms()
+
         if comm.UART_read():  # Check for UART Layer 1 Data
             if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
                 SpeechLayer = 0

@@ -20,8 +20,8 @@ fm.register(DAT_PIN, fm.fpioa.GPIOHS24)
 fm.register(CLK_PIN, fm.fpioa.GPIOHS25)
 
 # Initialize GPIO pins
-dat_pin = GPIO(GPIO.GPIOHS25, GPIO.OUT)
-clk_pin = GPIO(GPIO.GPIOHS24, GPIO.OUT)
+dat_pin = GPIO(GPIO.GPIOHS24, GPIO.OUT)
+clk_pin = GPIO(GPIO.GPIOHS25, GPIO.OUT)
 
 # The Pins are flipped on the end as it seems to work, likely a fault of the PCB design.
 

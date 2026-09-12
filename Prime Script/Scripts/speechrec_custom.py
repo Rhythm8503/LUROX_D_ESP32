@@ -21,7 +21,7 @@ import struct
 from speech_recognizer import isolated_word
 
 sr = isolated_word(dmac=2, i2s=I2S.DEVICE_0, size=35, shift=1) # maix bit set shift=1
-sr.set_threshold(100, 15, 11000)
+sr.set_threshold(150, 150, 9800)
 
 def sr_data_load(index, filename):
     with open('/sd/' + filename, 'rb') as f:
