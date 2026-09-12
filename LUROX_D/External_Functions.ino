@@ -678,11 +678,14 @@ class MyServerCallbacks : public BLEServerCallbacks {
 class MyCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
     String rxValue = pCharacteristic->getValue();
+
+    rxValue = str.trim(rxValue);
     if (rxValue.length() > 0 && rxValue.length() < 32) {
       strncpy(originalCommand, rxValue.c_str(), 31);
       originalCommand[31] = '\0';
       strncpy(commandBuffer, rxValue.c_str(), 31);
       commandBuffer[31] = '\0';
+      Serial.println(commandBuffer);
       newCommandReceived = true;
     }
   }
