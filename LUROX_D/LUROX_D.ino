@@ -1,12 +1,12 @@
-/* 
+/*********************************************************************************************** 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                            L.U.R.O.X. D 2026
+                                    L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
-    ESP32-S3 Board
+    ESP32-S3 Board & Maix-Bit K210
     LUROX D: Mark II Software
+***********************************************************************************************/
 
-*/
 
 /***************************************************************************************** 
                                 LUROX D Global Definitions
@@ -19,7 +19,8 @@ unsigned long ResetTimer = 0;
 unsigned long StepperTimer = 0;
 
 /* Decision Backbone Functions */
-bool CMD_IN = false;
+bool CMD_IN = false;   /* Notify when CMD has been received */
+bool CMD_PROC = false; /* Semaphore of when processing is in operation */
 bool ObjFound = false;
 bool HandTrack = false;
 uint8_t request, intent, objective, specification;
@@ -79,7 +80,6 @@ void loop() {
   /* Kinematics Function */
   Serial_Terminal();
 
-  
   /* Sleep Mode */
   if (Wander == false && SleepState == true) {
     Neutral_Position();
@@ -87,7 +87,7 @@ void loop() {
   }
 
   /* This loop wil primarily focus on the control loop reading information and kinematics instruction to grab objects */
-  if (CMD_IN == true) {
+  if (CMD_IN == true && CMD_PROC == false) {
     Wander = false; // Disable Wandering
     Extended_Position(); //Return to Standby-State
     Decision_Backbone(request, intent, specification, objective); /* Actions will be governed */

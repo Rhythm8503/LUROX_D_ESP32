@@ -1,12 +1,12 @@
-/* 
+/***********************************************************************************************
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2026
+                                    L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
     ESP32-S3 Board
     LUROX D: Mark II Software
 
-*/
+***********************************************************************************************/
 
 const double Max_Reach = 550.0;     /* mm  */
 const int Traj_Points = 50;
@@ -14,7 +14,7 @@ const int Traj_Points = 50;
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
 #define STEP_DELAY_MS  10   /* dwell per micro-step so servos physically settle */
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 /***************************************************************************************** 
                                 Trajectory Functions
@@ -148,7 +148,7 @@ float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and
 /* Look Up Table: [Layer][Group] -> Next Node */
 const Node transition_lut[5][4] = {
   /* Layer 1 = Request */       {INTENTION, SPECIFICATION_RESTRICTED, GESTURE, HALT},
-  /* Layer 2 = Intention */     {SPECIFICATION, ACTION, GESTURE, HALT},
+  /* Layer 2 = Intention */     {SPECIFICATION, GESTURE, HALT, ACTION},
   /* Layer 3 = Specification */ {COLOR, OBJECTIVE, ACTION, HALT},
   /* Layer 4 = Objective */     {ACTION, HALT, NOTHING, NOTHING},
   /* Layer 3 = Restricted */    {HALT, OBJECTIVE, ACTION, HALT}
@@ -163,6 +163,11 @@ const int* const node_input_maps[] ={
 };
 
 void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_input) {
+    #if DEBUGSYS 
+      Serial.println("Processing Command");
+    #endif
+
+    CMD_PROC = true;
     Node current_node = REQUEST;
 
     while (current_node <= SPECIFICATION_RESTRICTED) { /* Only Layers 1 - 5 will be processed */
@@ -203,12 +208,14 @@ void Halt_Function() {
   /* Move to Pose Position */
   Extended_Position();
   K210_Write_HALT(); /* Force Halt, even if the instruction came from the K210 */
+  CMD_END();
 }
 
 void Gesture_Function(int req_ges, int int_ges) {
   #if DEBUGSYS
   Serial.println("Displaying Gesture on Hand!");
   #endif
+
   /* Move to Pose Position */
   Extended_Position();
   
@@ -273,7 +280,8 @@ void Gesture_Function(int req_ges, int int_ges) {
         WristRA[0] = 30;
     }
   }
-  
+  /* Force Reset Everything */
+  CMD_END();
 }
 
 void Action_Function(int spec_action, int obj_action) {
@@ -281,7 +289,7 @@ void Action_Function(int spec_action, int obj_action) {
   if (ObjFound == false && HandTrack == false) {
     int Search_timeout = 0;
     for (Search_timeout < 60; Search_timeout++;) {
-      Search_Position(); /* Randomly Move to find object */
+      //Search_Position(); /* Randomly Move to find object */
       vTaskDelay(pdMS_TO_TICKS(1000));
       if (ObjFound == true) {
         break;
@@ -290,7 +298,7 @@ void Action_Function(int spec_action, int obj_action) {
 
     if (Search_timeout >= 60) {
       Search_timeout = 0;
-      CMD_IN = false;
+      CMD_END();
 
       #if DEBUGSYS
       Serial.println("Object not found, search timed out!");
@@ -304,7 +312,7 @@ void Action_Function(int spec_action, int obj_action) {
       HandInv_Timeout++;
       if (HandInv_Timeout > 1000) {
         ObjFound = false;
-        CMD_IN = false;
+        CMD_END();
 
         #if DEBUGSYS
         Serial.println("Timeout Alignment, Cannot grab!");
@@ -332,6 +340,15 @@ void Action_Function(int spec_action, int obj_action) {
   }
 }
 
+void CMD_END() {
+  request = 0;
+  intent = 0;
+  specification = 0;
+  objective = 0;
+
+  CMD_PROC = false;
+  CMD_IN = false;
+}
 
 
 

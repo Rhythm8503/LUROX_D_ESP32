@@ -1,12 +1,12 @@
-/* 
+/*********************************************************************************************** 
     Developed by Taheemuddin Ahmed with the Supervision of Dr.Wafi Danesh
     Learning, Observation, Understanding, Reasoning, Execution, Dynamic Prosthetic Algorithm.
-                          L.U.R.O.X. D 2026
+                                    L.U.R.O.X. D 2026
     Arduino Core: V3.2.1
-    ESP32-S3 Board
+    ESP32-S3 Board & Maix-Bit K210
     LUROX D: Mark II Software
+***********************************************************************************************/
 
-*/
 
 /***************************************************************************************** 
                               Libraries and Library Pointers
@@ -114,10 +114,6 @@ uint16_t FRSP = 500;  //Microsecond Pulse Width for Forearm Roll Steps
 #define STATE_READING_LAYER2       3
 #define STATE_WAITING_LAYER3_CLOSE 4
 
-#define MODE_STANDARD 0
-#define MODE_MANUAL 1
-#define MODE_SLEEP 2
-
 /* Semaphore Definitions */
 #define MAX_CONCURRENT_MOTORS 5
 #define MAX_FINGERCONCURRENT_MOTORS 3
@@ -164,9 +160,6 @@ double CurrentL[3] = {0, 0, 0}; /* Current XYZ from Forward Kinematics */
 int16_t Obj_Dist = 500;
 
 /* ################################################################################################ */
-
-/* General Modes: 0 = Standard, 1 = Manual, 2 = Sleep */
-uint8_t GeneralMode;
 
 /* Communication Variables */
 uint8_t txValue = 0;
