@@ -51,6 +51,9 @@ void setup() {
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
+
+    /* Move to Extended Position */
+    Extended_Position(); 
 }
 
 /***************************************************************************************** 

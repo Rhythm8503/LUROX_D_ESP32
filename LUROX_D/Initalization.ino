@@ -180,12 +180,8 @@ void Bluetooth_Initialization() {
 ******************************************************************************************/
 
 void Stepper_Home() {
-  /* Using the Hall Effect Sensor read the Forearm and Stepper and home */
-  // StepperTimer = millis();
 
-  // // Enable Motor
-  // digitalWrite(SHY_EN, LOW);
-
+  /* This function has been removed for MK2 and will be back MK3 */
   #if DEBUGSYS
   Serial.println("Homing SHY Motor");
   #endif
@@ -198,40 +194,6 @@ void Stepper_Home() {
     delayMicroseconds(500);
   }
 
-  // while(analogRead(SHY_HallEffect) < 100) {
-  //   digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-  //   delayMicroseconds(500);        // Adjust for motor speed
-  //   digitalWrite(SHY_STEP, LOW);
-  //   delayMicroseconds(500);
-
-  //   if ((millis() - StepperTimer) > 10000) {
-
-  //     #if DEBUGSYS
-  //     Serial.println("SHY Home Timed Out!");
-  //     #endif
-
-  //     digitalWrite(SHY_EN, HIGH);
-  //     break;
-  //   }
-  // } 
-
-  // if((millis() - StepperTimer) <= 10000) {
-  //   int32_t SHY_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
-  //   SHYAS.resetPosition(SHY_home_pos);
-  //   SHY_home = true;
-  //   ArmYA[2] = UpperArmSensor();
-  //   ArmYA[1] = ArmYA[2];
-
-  //   #if DEBUGSYS
-  //   Serial.println("Homed SHY Motor!");
-  //   #endif
-  // }
-  
-  // digitalWrite(SHY_EN, HIGH); /*Disable SHY Motor */
-  // StepperTimer = millis();    /* Restart Timer for Forearm motor */
-
-  // digitalWrite(FR_EN, LOW);
-
   #if DEBUGSYS
   Serial.println("Homing FR Motor");
   #endif
@@ -243,35 +205,20 @@ void Stepper_Home() {
     digitalWrite(FR_STEP, LOW);
     delayMicroseconds(500);
   }
+}
 
-  // while(analogRead(FR_HallEffect) < 100) {
-  //   digitalWrite(FR_STEP, HIGH);  
-  //   delayMicroseconds(500);       // Adjust for motor speed
-  //   digitalWrite(FR_STEP, LOW);
-  //   delayMicroseconds(500);
+void UART_Test() {
+  #if DEBUGSYS
+  Serial.println("Testing UART Communication");
+  #endif
 
-  //   if ((millis() - StepperTimer > 10000)) {
-
-  //     #if DEBUGSYS
-  //     Serial.println("FR Home Timed Out!");
-  //     #endif
-
-  //     digitalWrite(FR_EN, HIGH);
-  //     break;
-  //   }
-  // }
-
-  // if(millis() - StepperTimer <= 10000) {
-  //   int32_t FR_home_pos = static_cast<int32_t>(round(0 * COUNTS_PER_DEGREE));
-  //   FRAS.resetPosition(FR_home_pos);
-  //   FR_home = true;
-  //   WristRA[2] = HandSensor();
-  //   WristRA[1] = WristRA[2];
-
-  //   #if DEBUGSYS
-  //   Serial.println("Homed FR Motor");
-  //   #endif
-  // }
-
-  // digitalWrite(FR_EN, HIGH);  /* Disable FR Motor */
+  if (K210Serial.available()) {
+    String receivedData = K210Serial.readStringUntil('\n');
+    receivedData.trim(); // Remove any leading/trailing whitespace
+    if (receivedData == "UART_TEST") {
+      Serial.println("UART Communication Successful");
+    } else {
+      Serial.println("Unexpected Data Received: " + receivedData);
+    }
+  }
 }

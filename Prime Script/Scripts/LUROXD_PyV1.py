@@ -269,16 +269,19 @@ def obj_matches_filter(obj, img):
     """Returns True if object matches current Specification + Objective"""
     classid = obj.classid()
     obj_code = CLASS_TO_OBJECTIVE.get(classid, -1)
+
     # === COLOR FILTER (Specification 0-9) ===
-    if 0 <= Specification <= 9:
+    if (0 <= Specification <= 9) and (0 <= Objective <= 10): #Filter Color only when object selected
         color_idx = get_dominant_color(obj.rect(), img)
         if color_idx != Specification:
             return False
+        
     # === OBJECT TYPE FILTER (Specification 10-20) ===
-    elif 10 <= Specification <= 20:
+    elif 10 <= Specification <= 20: # Specification acting as Objective
         spec_obj_code = Specification - 10
         if obj_code != spec_obj_code:
             return False
+        
     # === OBJECTIVE FILTER (0-10) ===
     if 0 <= Objective <= 10:  # Only filter if Objective is set
         if obj_code != Objective:
@@ -452,15 +455,16 @@ def control_loop(state):
 
     while(True):
         current_time = utime.ticks_ms()
-        #if comm.UART_read():  # Check for UART Layer 1 Data
-            #if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
-                #SpeechLayer = 0
-                #Layer0_Load() # Loading the HOME Layer!
-                #SpeechActive = True
-                #Request = Intent = Specification = Objective = 0
-            #else:  # UART Layer 1 Data Received
-                #ObjectRec = True
-                #SpeechActive = False
+        if comm.UART_read():  # Check for UART Layer 1 Data
+            if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
+                SpeechLayer = 0
+                Layer0_Load() # Loading the HOME Layer!
+                SpeechActive = True
+                Request = Intent = Specification = Objective = 0
+            else:  # UART Layer 1 Data Received
+                ObjectRec = True
+                print(Request, Intent, Objective, Specification)
+                SpeechActive = False
 
         if ObjectRec and not was_active:
             kpu_session_begin(model_addr)

@@ -77,9 +77,14 @@ class Comm:
                             return True
                         else:
                             self.state = 0  # Reset on error
-
         else:
             return None
+
+        def UART_Test(self):
+            msg = "UART_TEST"
+            if msg:
+                msg = msg[:-2] + "\n"
+            self.uart.write(msg.encode())
 
 def init_uart():
     fm.register(15, fm.fpioa.UART1_TX, force=True)
