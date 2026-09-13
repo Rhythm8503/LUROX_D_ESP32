@@ -210,6 +210,7 @@ def initalize():
     global comm
     uart = init_uart()
     comm = comm(uart)
+    comm.UART_Test()     # Send over Test Message to ESP32 to Confirm K210 Active
     sk9822_init()
     
     # LED Bright On

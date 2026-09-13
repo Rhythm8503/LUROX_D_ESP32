@@ -81,7 +81,7 @@ class comm:
             return None
 
         def UART_Test(self):
-            msg = "UART_TEST"
+            msg = "K210 ALIVE"
             if msg:
                 msg = msg[:-2] + "\n"
             self.uart.write(msg.encode())

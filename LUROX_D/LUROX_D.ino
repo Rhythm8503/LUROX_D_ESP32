@@ -49,7 +49,7 @@ void setup() {
 
     Library_Initalization(); /* Primary Libraries, Sensors and etc */
     Motor_Initalization();   /* Initialize all Servo Motors */
-    Stepper_Home();          /* Home Stepper Motors */
+    UART_Test();              /* Test UART Communication with K210 */
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 

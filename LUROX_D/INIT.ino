@@ -212,13 +212,19 @@ void UART_Test() {
   Serial.println("Testing UART Communication");
   #endif
 
+  bool K210_Test = true;
+
+  while(K210_Test) {
   if (K210Serial.available()) {
     String receivedData = K210Serial.readStringUntil('\n');
     receivedData.trim(); // Remove any leading/trailing whitespace
-    if (receivedData == "UART_TEST") {
+    if (receivedData == "K210 ALIVE") {
       Serial.println("UART Communication Successful");
+      K210_Test = false; // Exit the loop after successful test
     } else {
       Serial.println("Unexpected Data Received: " + receivedData);
+      K210_Test = false; // Exit the loop if unexpected data is received
+    }
     }
   }
 }
