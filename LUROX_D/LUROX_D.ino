@@ -23,6 +23,8 @@ bool CMD_IN = false;   /* Notify when CMD has been received */
 bool CMD_PROC = false; /* Semaphore of when processing is in operation */
 bool ObjFound = false;
 bool HandTrack = false;
+bool Anim_Break = false;
+bool ACT_Break = false;
 uint8_t request, intent, objective, specification;
 
 /* Global Function Flags */
@@ -32,7 +34,7 @@ bool Grab = false;
 bool Wander = true;
 bool SleepState = false;
 bool manualMode = false;
-bool Anim_Break = false;
+
 #define DEBUGSYS true
 
 /***************************************************************************************** 

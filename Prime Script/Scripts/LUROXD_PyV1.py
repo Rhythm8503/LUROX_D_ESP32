@@ -211,6 +211,11 @@ def initalize():
     uart = init_uart()
     comm = comm(uart)
     sk9822_init()
+    
+    # LED Bright On
+    brightness_values = [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
+    color = [255, 255, 255]  # Red color
+    set_led_ring(brightness_values, color)
     #Layer0_Load()
 
     CV_Init()
@@ -482,12 +487,13 @@ def control_loop(state):
     while(True):
         current_time = utime.ticks_ms()
 
-        if comm.UART_read():  # Check for UART Layer 1 Data
+        if comm.UART_read(Request, Intent, Objective, Specification):  # Check for UART Layer 1 Data
             if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
                 SpeechLayer = 0
                 Layer0_Load() # Loading the HOME Layer!
                 SpeechActive = True
                 Request = Intent = Specification = Objective = 0
+
             else:  # UART Layer 1 Data Received
                 ObjectRec = True
                 print(Request, Intent, Objective, Specification)

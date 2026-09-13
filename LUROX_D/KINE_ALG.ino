@@ -12,7 +12,7 @@
                             Vector Position Kinematics Functions
 ******************************************************************************************/
 
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 /* Mathmatics Variables */
 const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */

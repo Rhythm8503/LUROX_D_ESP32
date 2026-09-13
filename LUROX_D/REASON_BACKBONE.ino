@@ -208,6 +208,8 @@ void Halt_Function() {
   /* Move to Pose Position */
   Extended_Position();
   K210_Write_HALT(); /* Force Halt, even if the instruction came from the K210 */
+  ACT_Break = true;
+  Anim_Break = true;
   CMD_END();
 }
 
@@ -217,6 +219,7 @@ void Gesture_Function(int req_ges, int int_ges) {
   #endif
 
   /* Move to Pose Position */
+  Anim_Break = false; 
   Extended_Position();
   
   /* Input to Action */
@@ -281,38 +284,46 @@ void Gesture_Function(int req_ges, int int_ges) {
     }
   }
   /* Force Reset Everything */
+  Extended_Position();
   CMD_END();
 }
 
 void Action_Function(int spec_action, int obj_action) {
+  #if DEBUGSYS
+    Serial.println("Action Activated!");
+  #endif
+
+  /* Start Function */
+  ACT_Break = false;
+  uint8_t Search_timeout = 0;
+  uint8_t HandInv_Timeout = 0;
+
+  while((ACT_Break == false) && (CMD_PROC == true)) {
+
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
-    int Search_timeout = 0;
     for (Search_timeout < 60; Search_timeout++;) {
       #if DEBUGSYS
         Serial.println("Searching for Object!");
       #endif
 
       Search_Position(); /* Randomly Move to find object */
-      vTaskDelay(pdMS_TO_TICKS(1000));
-
-      if (ObjFound == true) {
-        break;
-      }
+      vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
-    if (Search_timeout >= 60) {
+    if (Search_timeout >= 30) {
       Search_timeout = 0;
       CMD_END();
 
       #if DEBUGSYS
       Serial.println("Object not found, search timed out!");
       #endif
+
+      break;
     }
   }
 
   if (ObjFound == true && HandTrack == false) {
-    int HandInv_Timeout = 0;
     while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Until the function centers the object, it will run */
       HandInv_Timeout++;
       #if DEBUGSYS
@@ -326,10 +337,19 @@ void Action_Function(int spec_action, int obj_action) {
         #if DEBUGSYS
         Serial.println("Timeout Alignment, Cannot grab!");
         #endif
+        break;
+      }
 
+      if (ACT_Break == true) {
+        #if DEBUGSYS
+          Serial.println("Force Halt!");
+        #endif
+
+        CMD_END();
         break;
       }
     }
+
     if (Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
       HandTrack = true;
       #if DEBUGSYS
@@ -349,6 +369,9 @@ void Action_Function(int spec_action, int obj_action) {
 
     Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
+
+    CMD_END(); /* End Function, Objective Achieved */
+    }
   }
 }
 
@@ -364,6 +387,8 @@ void CMD_END() {
 
   CMD_PROC = false;
   CMD_IN = false;
+
+  K210_Write_HALT();
 }
 
 

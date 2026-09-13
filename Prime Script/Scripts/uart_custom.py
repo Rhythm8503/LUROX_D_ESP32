@@ -55,7 +55,7 @@ class comm:
             msg = msg[:-2] + "\n"
         self.uart.write(msg.encode())
 
-    def UART_read(self):
+    def UART_read(self, R, I, O, S):
         global request, intent, objective, specification, SpeechActive
         if self.uart.any():
             data = self.uart.read()
@@ -69,10 +69,10 @@ class comm:
                         self.buffer.append(byte)
                     else:
                         if byte == 0x03:  # CLOSE
-                            Request = self.buffer[0]
-                            Intent = self.buffer[1]
-                            Objective = self.buffer[2]
-                            Specification = self.buffer[3]
+                            R = self.buffer[0]
+                            I = self.buffer[1]
+                            O = self.buffer[2]
+                            S = self.buffer[3]
                             self.state = 0
                             return True
                         else:

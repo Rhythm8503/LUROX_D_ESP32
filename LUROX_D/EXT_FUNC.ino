@@ -78,7 +78,7 @@ void Extended_Position() { /* Extended out on the XYZ Plane */
   #endif
 
   ArmRA[0] = 135;
-  ArmPA[0] = 150;
+  ArmPA[0] = 160;
   ArmYA[0] = 135;
   ElbowPA[0] = 190;
   WristRA[0] = 135;

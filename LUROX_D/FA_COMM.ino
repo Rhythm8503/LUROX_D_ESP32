@@ -27,7 +27,8 @@ void K210_Handle() {
 
   if (K210Serial.available()) {
     byte b = K210Serial.read();
-
+    Serial.println(b);
+    
     switch (state) {
       case STATE_WAITING_LAYER1:
         if (b == 0x1) {  // Layer 1 <OPEN>
