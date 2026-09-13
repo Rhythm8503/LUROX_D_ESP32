@@ -147,11 +147,11 @@ float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and
 
 /* Look Up Table: [Layer][Group] -> Next Node */
 const Node transition_lut[5][4] = {
-  /* Layer 1 = Request */       {INTENTION, SPECIFICATION_RESTRICTED, GESTURE, HALT},
-  /* Layer 2 = Intention */     {SPECIFICATION, GESTURE, HALT, ACTION},
-  /* Layer 3 = Specification */ {COLOR, OBJECTIVE, ACTION, HALT},
-  /* Layer 4 = Objective */     {ACTION, HALT, NOTHING, NOTHING},
-  /* Layer 3 = Restricted */    {HALT, OBJECTIVE, ACTION, HALT}
+  /* Layer 1 = Request */       {INTENTION, SPECIFICATION_RESTRICTED, GESTURE, HALT},   /* Request -> Intention, Request -> Specification, Gesture or Halt */
+  /* Layer 2 = Intention */     {SPECIFICATION, GESTURE, HALT, ACTION},                 /* Intention -> Specification, Gesture, or Halt. Action potentially? */
+  /* Layer 3 = Specification */ {OBJECTIVE, ACTION, HALT, NOTHING},                     /* Color Selection -> Objective, or Action or Halt */
+  /* Layer 4 = Objective */     {ACTION, HALT, NOTHING, NOTHING},                       /* Final Stage, Action or Halt */
+  /* Layer 3 = Restricted */    {NOTHING, ACTION, HALT, NOTHING}                        /* Just grab object */
 };
 
 const int* const node_input_maps[] ={
@@ -289,8 +289,13 @@ void Action_Function(int spec_action, int obj_action) {
   if (ObjFound == false && HandTrack == false) {
     int Search_timeout = 0;
     for (Search_timeout < 60; Search_timeout++;) {
-      //Search_Position(); /* Randomly Move to find object */
+      #if DEBUGSYS
+        Serial.println("Searching for Object!");
+      #endif
+
+      Search_Position(); /* Randomly Move to find object */
       vTaskDelay(pdMS_TO_TICKS(1000));
+
       if (ObjFound == true) {
         break;
       }
@@ -310,7 +315,11 @@ void Action_Function(int spec_action, int obj_action) {
     int HandInv_Timeout = 0;
     while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Until the function centers the object, it will run */
       HandInv_Timeout++;
-      if (HandInv_Timeout > 1000) {
+      #if DEBUGSYS
+        Serial.println("Attempting to Align!");
+      #endif
+
+      if (HandInv_Timeout > 100) {
         ObjFound = false;
         CMD_END();
 
@@ -323,6 +332,9 @@ void Action_Function(int spec_action, int obj_action) {
     }
     if (Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
       HandTrack = true;
+      #if DEBUGSYS
+        Serial.println("ALIGNED! Attempting to Grab!");
+      #endif
     }
   }
 
@@ -341,6 +353,10 @@ void Action_Function(int spec_action, int obj_action) {
 }
 
 void CMD_END() {
+  #if DEBUGSYS
+        Serial.println("Function Ended, returning back to main state!");
+  #endif
+
   request = 0;
   intent = 0;
   specification = 0;

@@ -87,8 +87,8 @@ class comm:
             self.uart.write(msg.encode())
 
 def init_uart():
-    fm.register(15, fm.fpioa.UART1_TX, force=True)
-    fm.register(10, fm.fpioa.UART1_RX, force=True)
+    fm.register(10, fm.fpioa.UART1_TX, force=True)
+    fm.register(15, fm.fpioa.UART1_RX, force=True)
 
     uart = UART(UART.UART1, 115200, 8, 0, 0, timeout=1000, read_buf_len=256)
     return uart

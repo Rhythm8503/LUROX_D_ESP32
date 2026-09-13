@@ -50,14 +50,14 @@ void Search_Position() { // Hunting for Object
   #if DEBUGSYS
   Serial.println("Searching for Object!");
   #endif
-  WristPA[0] = 110; /* Locked rotation */
 
   /* Randomly moving positions to try finding */
-  WristRA[0] = random(110, 150);
-  ArmYA[0] = random(110, 150); 
-  ArmPA[0] = random(170, 175);
-  ArmYA[0] = random(120, 150);
-  ElbowPA[0] = random(210, 220);
+  WristRA[0] = random(125, 145);
+  WristPA[0] = random(80, 100); 
+  //ArmYA[0] = random(125, 135); /* Disabled due to Debug Probe */
+  ArmPA[0] = random(150, 160);
+  ArmRA[0] = random(125, 145);
+  ElbowPA[0] = random(180, 190);
 }
 
 void Wake() {  // Initalizing Objects
@@ -143,7 +143,7 @@ void Wave_Movement() { // Pre-Defined Wave Animation
   WristRA[0] = 135;
   WristPA[0] = 90;
   vTaskDelay(pdMS_TO_TICKS(500));
-  Neutral_Position();
+
 }
 
 void Handshake() {  // Pre-Defined Handshake
@@ -187,7 +187,6 @@ void Handshake() {  // Pre-Defined Handshake
   /* Return the hand back to open */
     Gestures[0] = 0;
     HandCode();
-    Neutral_Position();
 }
 
 void HighFive() {
@@ -221,7 +220,6 @@ void HighFive() {
 
     Extended_Position(); /* Return back! */
     vTaskDelay(pdMS_TO_TICKS(1000));
-    Neutral_Position();
 }
 
 /***************************************************************************************** 

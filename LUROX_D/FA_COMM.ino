@@ -178,9 +178,10 @@ void handleCommand(char *cmd) {
   } else if (currentContext == COMMAND_MENU) {
     if (parseCommandSequence(cmd)) {
        // Success - use the values
-       sprintf(response, "Req: %d, Int: %d, Spec: %d, Obj: %d", request, intent, specification, objective);
+       sprintf(response, "R: %d, I: %d, S: %d, O: %d", request, intent, specification, objective);
        sendResponse(response);
        K210_Write_Comm();
+       currentContext = MAIN;
        CMD_IN = true;
     }
     else if (strcmp(cmd, "EXIT") == 0) {
@@ -188,7 +189,7 @@ void handleCommand(char *cmd) {
       sendResponse("Main menu, Select MODE or STATUS");
     } 
     else {
-        sendResponse("Invalid format. Enter 4 numbers separated by spaces (e.g., '1 3 0 3')");
+        sendResponse("Invalid format. (Ex: '1 3 0 3')");
     }
     
   } else if (currentContext == MANUAL_MENU) {
@@ -281,7 +282,7 @@ bool parseCommandSequence(const char* input) {
 
     // 2. Length check - "0 0 0 0" = 7 chars, "10 10 10 10" = 11 chars
     size_t len = strlen(input);
-    if (len < 7 || len > 14) {  // Allow some margin for extra spaces
+    if (len < 7 || len > 16) {  // Allow some margin for extra spaces
         return false;
     }
 
