@@ -103,12 +103,18 @@ void Neutral_Position() { /* Straight Down position */
 }
 
 void Wrist_Wave() {
+  /* Return Back */
+  WristRA[0] = 135;
+
+  /* Wave */
   for (int Wave = 0; Wave < 2; Wave++) {
     WristRA[0] = 125;
-    vTaskDelay(pdMS_TO_TICKS(700));
+    vTaskDelay(pdMS_TO_TICKS(1500));
     WristRA[0] = 145;
-    vTaskDelay(pdMS_TO_TICKS(700));
+    vTaskDelay(pdMS_TO_TICKS(1500));
   }
+
+  /* Return Back */
   WristRA[0] = 135;
 }
 
@@ -194,17 +200,18 @@ void HighFive() {
   Serial.println("Beginning High-Five!");
   #endif 
 
-  unsigned long Anim_Timer = millis(); /* Time out counter */
+  unsigned long Anim_Timer = millis();      /* Time out counter */
 
-  while((millis() - Anim_Timer) < 10000) { /* It will wait 15 seconds before timing out */
-    if (Anim_Break == true) { /* If Animation is requested to break, then it will break */
+  while((millis() - Anim_Timer) < 10000) {  /* It will wait 15 seconds before timing out */
+    if (Anim_Break == true) {               /* If Animation is requested to break, then it will break */
       break;
     }
      vTaskDelay(pdMS_TO_TICKS(1000));
-     if (Obj_Dist < 500) { /* Someone is approaching! */
-      /* Pull Arm Forward */
+     if (Obj_Dist < 500) {                   /* Someone is approaching! */
+
+        /* Pull Arm Forward */
         ElbowPA[0] = 200;
-        ArmPA[0] = 160; /* Pull Arm Forward */
+        ArmPA[0] = 160;  /* Pull Arm Forward */
         vTaskDelay(pdMS_TO_TICKS(10));
         if (Obj_Dist > 100) {
           break;
@@ -220,7 +227,7 @@ void HighFive() {
 /***************************************************************************************** 
                                   Hand Gesture Functions
 ******************************************************************************************/
-void HandCode() {                   // Hand Servos Control
+void HandCode() {   // Hand Servos Control
   if (HandRot == false && SleepState == false && (Gestures[0] != Gestures[1])) {  //Gesture Control
     HandRot = true;
     Wander = false;
