@@ -42,6 +42,12 @@ class comm:
 
     def UART_Layered_Track(self, Open, track, Close):
         x, y, w, h = track['rect']
+
+        x = int(x * 224)
+        y = int(y * 224)
+        w = int(w * 224)
+        h = int(h * 224)
+        
         msg = bytes([Open, x, y, w, h, Close])
         self.uart.write(msg)
 
@@ -49,14 +55,7 @@ class comm:
         msg = bytes([Open, R, I, O, S, Close])
         self.uart.write(msg)
 
-    def UART_Test(self):
-        msg = "UART_TEST"
-        if msg:
-            msg = msg[:-2] + "\n"
-        self.uart.write(msg.encode())
-
-    def UART_read(self, R, I, O, S):
-        global request, intent, objective, specification, SpeechActive
+    def UART_read(self):
         if self.uart.any():
             data = self.uart.read()
             for byte in data:
@@ -69,10 +68,12 @@ class comm:
                         self.buffer.append(byte)
                     else:
                         if byte == 0x03:  # CLOSE
-                            R = self.buffer[0]
-                            I = self.buffer[1]
-                            O = self.buffer[2]
-                            S = self.buffer[3]
+                            self.layer1_data = [
+                                self.buffer[0],
+                                self.buffer[1],
+                                self.buffer[2],
+                                self.buffer[3]
+                            ]
                             self.state = 0
                             return True
                         else:

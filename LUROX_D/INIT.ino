@@ -213,8 +213,11 @@ void UART_Test() {
   #endif
 
   bool K210_Test = true;
+  uint8_t TimeoutCounter = 0;
 
   while(K210_Test) {
+  TimeoutCounter++;
+  vTaskDelay(pdMS_TO_TICKS(10)); /* Slight Delay */
   if (K210Serial.available()) {
     String receivedData = K210Serial.readStringUntil('\n');
     receivedData.trim(); // Remove any leading/trailing whitespace
@@ -225,6 +228,11 @@ void UART_Test() {
       Serial.println("Unexpected Data Received: " + receivedData);
       K210_Test = false; // Exit the loop if unexpected data is received
     }
+    }
+  
+  if (TimeoutCounter > 254) { // Timeout after 254 iterations
+      Serial.println("UART Communication Failed: No Response from K210");
+      K210_Test = false; // Exit the loop after timeout
     }
   }
 }
