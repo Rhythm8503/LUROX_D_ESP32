@@ -81,11 +81,11 @@ class comm:
         else:
             return None
 
-        def UART_Test(self):
-            msg = "K210 ALIVE"
-            if msg:
-                msg = msg[:-2] + "\n"
-            self.uart.write(msg.encode())
+    def UART_Test(self):
+        msg = "K210 ALIVE"
+        if msg:
+            msg = msg[:-2] + "\n"
+        self.uart.write(msg.encode())
 
 def init_uart():
     fm.register(10, fm.fpioa.UART1_TX, force=True)
