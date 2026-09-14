@@ -45,9 +45,14 @@ class comm:
 
         x = int(x * 224)
         y = int(y * 224)
-        w = int(w * 224)
-        h = int(h * 224)
-        
+        w = int(track['rect'][2] * (224.0 / 320.0))
+        h = int(track['rect'][3] * (224.0 / 240.0))
+
+        x = max(0, min(255, int(x)))
+        y = max(0, min(255, int(y)))
+        w = max(0, min(255, int(w)))
+        h = max(0, min(255, int(h)))
+
         msg = bytes([Open, x, y, w, h, Close])
         self.uart.write(msg)
 
