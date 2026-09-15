@@ -212,7 +212,7 @@ def initalize():
     comm = comm(uart)
     comm.UART_Test()     # Send over Test Message to ESP32 to Confirm K210 Active
     sk9822_init()
-    
+
     # LED Bright On
     brightness_values = [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
     color = [255, 255, 255]  # Red color
@@ -470,7 +470,7 @@ def main(anchors, labels):
             labels[track['classid']], track['P'], track['R'])
         img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
         locked_count += 1
-        print(track['X'], track['Y'], track['id'])
+        print(track['X'], track['Y'], track['W'], track['H'], track['id'])  # Print Result
         comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
 
     return img, locked_count

@@ -76,7 +76,8 @@ void K210_Handle() {
           else if (layer2_counter == 2) objW = b;
           else if (layer2_counter == 3) objH = b;
           layer2_counter++;
-
+          Serial.println(objX);
+          Serial.println(objY);
         } else {
           if (b == 0x4) {                  // Layer 2 <CLOSE>
             ObjFound = true; /* Declare found */

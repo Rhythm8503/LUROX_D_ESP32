@@ -302,13 +302,13 @@ void Action_Function(int spec_action, int obj_action) {
 
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
-    for (Search_timeout < 60; Search_timeout++;) {
+    for (Search_timeout < 30; Search_timeout++;) {
       #if DEBUGSYS
         Serial.println("Searching for Object!");
       #endif
 
       Search_Position(); /* Randomly Move to find object */
-      vTaskDelay(pdMS_TO_TICKS(2000));
+      vTaskDelay(pdMS_TO_TICKS(3000)); /* Pause for Wobble */
     }
 
     if (Search_timeout >= 30) {

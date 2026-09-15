@@ -517,8 +517,9 @@ void Pinky_Mot(void* pvParameters) {
 void Sensor_Feedback(void* pvParameters) {
   Serial.println("Sensor Gathering Task Handle Opened");
   while (1) {
-    vTaskDelay(pdMS_TO_TICKS(10)); // 10ms Poll Period for Sensor Readings
-
+    vTaskDelay(pdMS_TO_TICKS(5)); // 10ms Poll Period for Sensor Readings
+    K210_Handle();      //Read UART Commands from the K210
+    Bluetooth_Handle(); //Read Commands from BLE Terminal
     WristRA[2] = HandSensor(); /* Read and Declare Angle */
     //ArmYA[2] = UpperArmSensor(); /* Read and Declare Angle */  
   }
