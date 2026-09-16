@@ -108,11 +108,11 @@ uint16_t FRSP = 500;  //Microsecond Pulse Width for Forearm Roll Steps
 /* Communication Sepecifications */
 #define RX_PIN 10
 #define TX_PIN 11
-#define STATE_WAITING_LAYER1       0
+
+#define STATE_WAITING_LAYER        0
 #define STATE_READING_LAYER1       1
-#define STATE_WAITING_LAYER2       2
-#define STATE_READING_LAYER2       3
-#define STATE_WAITING_LAYER3_CLOSE 4
+#define STATE_READING_LAYER2       2
+#define STATE_WAITING_LAYER3_CLOSE 3
 
 /* Semaphore Definitions */
 #define MAX_CONCURRENT_MOTORS 5
@@ -163,7 +163,7 @@ int16_t Obj_Dist = 500;
 
 /* Communication Variables */
 uint8_t txValue = 0;
-int state = STATE_WAITING_LAYER1;
+int state = STATE_WAITING_LAYER;
 int layer1_counter = 0;
 int layer2_counter = 0;
 uint8_t objX, objY, objW, objH; // Object XY and Box Size used to determine Desired Position

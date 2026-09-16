@@ -27,13 +27,15 @@ void K210_Handle() {
 
   if (K210Serial.available()) {
     byte b = K210Serial.read();
-    Serial.println(b);
     
     switch (state) {
-      case STATE_WAITING_LAYER1:
+      case STATE_WAITING_LAYER:
         if (b == 0x1) {  // Layer 1 <OPEN>
           state = STATE_READING_LAYER1;
           layer1_counter = 0;
+        } else if (b == 0x2) { // Layer 2 <OPEN>
+          state = STATE_READING_LAYER2;
+          layer2_counter = 0; //Reset counter 
         } else if (b == 0xB) {  // Layer 3 <OPEN> (start of exit sequence)
           state = STATE_WAITING_LAYER3_CLOSE;
         }
@@ -47,25 +49,14 @@ void K210_Handle() {
           else if (layer1_counter == 1) intent = b;
           else if (layer1_counter == 2) objective = b;
           else if (layer1_counter == 3) specification = b;
-          CMD_IN = true;  // Set the command input flag
           layer1_counter++;
         } else {
           if (b == 0x3) {                  // Layer 1 <CLOSE>
-            state = STATE_WAITING_LAYER2;  // Layer 1 complete, ready for Layer 2
+            CMD_IN = true;                 // Set the command input flag
           } else {
-            state = STATE_WAITING_LAYER1;  // Invalid sequence, reset
+            state = STATE_WAITING_LAYER;  // Invalid sequence, reset
           }
         }
-        break;
-
-      case STATE_WAITING_LAYER2:
-        if (b == 0x2) {  // Layer 2 <OPEN>
-          state = STATE_READING_LAYER2;
-          layer2_counter = 0;
-        } else if (b == 0xB) {  // Layer 3 <OPEN> (start of exit sequence)
-          state = STATE_WAITING_LAYER3_CLOSE;
-        }
-        // Ignore other bytes
         break;
 
       case STATE_READING_LAYER2:
@@ -76,28 +67,33 @@ void K210_Handle() {
           else if (layer2_counter == 2) objW = b;
           else if (layer2_counter == 3) objH = b;
           layer2_counter++;
-          Serial.println(objX);
-          Serial.println(objY);
         } else {
-          if (b == 0x4) {                  // Layer 2 <CLOSE>
-            ObjFound = true; /* Declare found */
-            state = STATE_WAITING_LAYER1;  // Layer 2 complete, reset to Layer 1
-                                           // Variables are now stored and can be used
+          if (b == 4) {                  // Layer 2 <CLOSE>
+            ObjFound = true;                /* Declare found */
+            state = STATE_WAITING_LAYER;  // Layer 2 complete, reset to Layer 1
           } else {
-            state = STATE_WAITING_LAYER1;  // Invalid sequence, reset
+            state = STATE_WAITING_LAYER;  // Invalid sequence, reset
           }
         }
         break;
 
       case STATE_WAITING_LAYER3_CLOSE:
         if (b == 0xF) {                  // Layer 3 <CLOSE> (exit complete)
-          state = STATE_WAITING_LAYER1;  // Reset to waiting for Layer 1
+          state = STATE_WAITING_LAYER;  // Reset to waiting for Layer 1
         } else {
-          state = STATE_WAITING_LAYER1;  // Invalid sequence, reset
+          state = STATE_WAITING_LAYER;  // Invalid sequence, reset
         }
         break;
     }
   }
+  // Serial.print("ObjX ="); 
+  // Serial.println(objX);
+  // Serial.print("ObjY =");
+  // Serial.println(objY);
+  // Serial.print("ObjW ="); 
+  // Serial.println(objW);
+  // Serial.print("ObjH =");
+  // Serial.println(objH);
 }
 
 void K210_Write_Comm() {

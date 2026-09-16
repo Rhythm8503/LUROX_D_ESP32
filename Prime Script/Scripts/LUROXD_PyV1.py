@@ -164,7 +164,7 @@ sr.set_threshold(150, 150, 9800)
 #                      Camera & YOLO Initalization
 #######################################################################
 def CV_Init():
-    sensor.reset(freq=24000000)
+    sensor.reset(freq=22000000)
     sensor.set_pixformat(sensor.RGB565)
     sensor.set_framesize(sensor.QVGA)
     #sensor.skip_frames(time=2000)
@@ -470,7 +470,7 @@ def main(anchors, labels):
             labels[track['classid']], track['P'], track['R'])
         img.draw_string(r[0], r[1], lbl, scale=2, color=(0, 255, 0))
         locked_count += 1
-        print(track['X'], track['Y'], track['W'], track['H'], track['id'])  # Print Result
+        print(track['X'], track['Y'], track['rect'][0], track['rect'][1], track['id'])  # Print Result
         comm.UART_Layered_Track(UARTLayer_2_Open, track, UARTLayer_2_Close) # Output onto UART
 
     return img, locked_count

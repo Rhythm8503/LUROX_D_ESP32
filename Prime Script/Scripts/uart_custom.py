@@ -41,12 +41,11 @@ class comm:
         self.layer2_data = [0, 0, 0, 0]  # objX, objY, objW, objH
 
     def UART_Layered_Track(self, Open, track, Close):
-        x, y, w, h = track['rect']
 
-        x = int(x * 224)
-        y = int(y * 224)
-        w = int(track['rect'][2] * (224.0 / 320.0))
-        h = int(track['rect'][3] * (224.0 / 240.0))
+        x = int(track['rect'][0])
+        y = int(track['rect'][1])
+        w = int(track['rect'][2])
+        h = int(track['rect'][3])
 
         x = max(0, min(255, int(x)))
         y = max(0, min(255, int(y)))

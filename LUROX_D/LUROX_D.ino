@@ -48,8 +48,9 @@ void setup() {
     #endif 
 
     Library_Initalization(); /* Primary Libraries, Sensors and etc */
-    Motor_Initalization();   /* Initialize all Servo Motors */
+    delay(2000);
     UART_Test();              /* Test UART Communication with K210 */
+    Motor_Initalization();   /* Initialize all Servo Motors */
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
