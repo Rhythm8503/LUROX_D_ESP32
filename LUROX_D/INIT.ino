@@ -218,6 +218,11 @@ void UART_Test() {
   while(K210_Test) {
   TimeoutCounter++;
   vTaskDelay(pdMS_TO_TICKS(10)); /* Slight Delay */
+  while(1) {
+    //Hold this here
+    delay(10);
+    K210_Handle(); /* Print if recieved */
+  }
   if (K210Serial.available()) {
     String receivedData = K210Serial.readStringUntil('\n');
     receivedData.trim(); // Remove any leading/trailing whitespace

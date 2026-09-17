@@ -65,7 +65,7 @@ SpeechLayer = 0
 Request = 0
 Intent = 0
 Objective = 0
-Specification = 0
+Specification = 10
 
 sample_rate   = 26000
 record_time   = 2  #s
@@ -137,8 +137,8 @@ def distance(p1, p2):
 
 # Semaphores / Flags
 SpeechInterrupt = False
-ObjectRec = False
-SpeechActive = True
+ObjectRec = True
+SpeechActive = False
 ESPConnected = False
 sensor_hmirror=False
 sensor_vflip=False

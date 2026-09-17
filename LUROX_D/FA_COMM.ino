@@ -69,7 +69,9 @@ void K210_Handle() {
           layer2_counter++;
         } else {
           if (b == 4) {                  // Layer 2 <CLOSE>
-            ObjFound = true;                /* Declare found */
+            if (CMD_PROC == true) {
+              ObjFound = true;                /* Declare found */
+            }
             state = STATE_WAITING_LAYER;  // Layer 2 complete, reset to Layer 1
           } else {
             state = STATE_WAITING_LAYER;  // Invalid sequence, reset
@@ -86,14 +88,12 @@ void K210_Handle() {
         break;
     }
   }
-  // Serial.print("ObjX ="); 
-  // Serial.println(objX);
-  // Serial.print("ObjY =");
-  // Serial.println(objY);
-  // Serial.print("ObjW ="); 
-  // Serial.println(objW);
-  // Serial.print("ObjH =");
-  // Serial.println(objH);
+  #if DEBUGSYS
+  Serial.print("ObjX ="); 
+  Serial.println(objX);
+  Serial.print("ObjY =");
+  Serial.println(objY);
+  #endif
 }
 
 void K210_Write_Comm() {
