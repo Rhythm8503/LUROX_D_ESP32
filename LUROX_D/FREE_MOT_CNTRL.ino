@@ -11,7 +11,7 @@
 /***************************************************************************************** 
                                   Arm Position Functions
 ******************************************************************************************/
-#define DEBUGSYS true
+#define DEBUGSYS false
 
 void ARMYA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
@@ -224,7 +224,7 @@ void WRPA_Mot(void* pvParameters) {
 
         vTaskDelay(pdMS_TO_TICKS(WPA_DelayMs)); // Non-blocking RTOS delay
       }
-
+      
       WristPA[2] = WristPA[1];
       WristPA[1] = WristPA[0];  // Log
       xSemaphoreGive(motorSemaphore);
@@ -281,6 +281,8 @@ void WRRA_Mot(void* pvParameters) {
         digitalWrite(FR_STEP, LOW);
         delayMicroseconds(500);
       }
+
+      if (CMD_PROC == true && Grab == false) digitalWrite(FR_EN, HIGH); /* Disable Motor after movement to limit EMI */
 
       WristRA[1] = WristRA[0]; 
       xSemaphoreGive(motorSemaphore);
@@ -477,7 +479,9 @@ void Pinky_Mot(void* pvParameters) {
   #if DEBUGSYS
   Serial.println("Pinky Task Handle Opened");
   #endif
+
   HP.attach(PINKY, 500, 2500);
+
   while (1) {
     if (PinkyRA[0] != PinkyRA[1]) {
       /* Change Servo State */
@@ -515,7 +519,11 @@ void Pinky_Mot(void* pvParameters) {
 }
 
 void Sensor_Feedback(void* pvParameters) {
+
+  #if DEBUGSYS
   Serial.println("Sensor Gathering Task Handle Opened");
+  #endif
+
   while (1) {
     vTaskDelay(pdMS_TO_TICKS(5)); // 10ms Poll Period for Sensor Readings
     K210_Handle();      //Read UART Commands from the K210

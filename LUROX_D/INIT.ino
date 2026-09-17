@@ -56,7 +56,7 @@ void Library_Initalization() {
   ESP32PWM::allocateTimer(3);  //Hand Timer
 
   #if DEBUGSYS
-  Serial.println("Timers Allocated");
+    Serial.println("Timers Allocated");
   #endif
 
   /* Embedded Protocol Ports */
@@ -209,7 +209,7 @@ void Stepper_Home() {
 
 void UART_Test() {
   #if DEBUGSYS
-  Serial.println("Testing UART Communication");
+    Serial.println("Testing UART Communication");
   #endif
 
   bool K210_Test = true;

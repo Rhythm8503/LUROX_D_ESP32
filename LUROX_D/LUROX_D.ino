@@ -22,10 +22,10 @@ unsigned long StepperTimer = 0;
 bool CMD_IN = false;   /* Notify when CMD has been received */
 bool CMD_PROC = false; /* Semaphore of when processing is in operation */
 bool ObjFound = false;
+bool Searching = false;
 bool HandTrack = false;
 bool Anim_Break = false;
 bool ACT_Break = false;
-uint8_t request, intent, objective, specification;
 
 /* Global Function Flags */
 bool HandRot = false;
@@ -34,6 +34,8 @@ bool Grab = false;
 bool Wander = true;
 bool SleepState = false;
 bool manualMode = false;
+
+uint8_t request, intent, objective, specification;
 
 #define DEBUGSYS true
 
@@ -44,20 +46,16 @@ bool manualMode = false;
 void setup() {
     /* Initalization for LUROX D */
     #if DEBUGSYS
-    Serial.begin(115200);
+      Serial.begin(115200);
     #endif 
 
-    Library_Initalization(); /* Primary Libraries, Sensors and etc */
-    delay(2000);
-    UART_Test();              /* Test UART Communication with K210 */
-    Motor_Initalization();   /* Initialize all Servo Motors */
+    Library_Initalization();    /* Primary Libraries, Sensors and etc */
+    UART_Test();                /* Test UART Communication with K210 */
+    Motor_Initalization();      /* Initialize all Servo Motors */
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
     vTaskDelay(pdMS_TO_TICKS(100));
-
-    /* Move to Extended Position */
-    Extended_Position(); 
 }
 
 /***************************************************************************************** 

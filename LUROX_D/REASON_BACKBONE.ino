@@ -230,12 +230,16 @@ void Gesture_Function(int req_ges, int int_ges) {
       case 8: /* Thumbs Up */
         Extended_Position();
         Gestures[0] = 2;
-        WristPA[0] = 30;
+        HandCode();
+        WristRA[0] = 30;
+        WristRA_Lock(); 
         break;
       case 9: /* Thumbs Down */
         Extended_Position();
         Gestures[0] = 2;
-        WristPA[0] = 240;
+        HandCode();
+        WristRA[0] = 240;
+        WristRA_Lock();
         break;
       case 10: HighFive(); break;
     }
@@ -251,6 +255,7 @@ void Gesture_Function(int req_ges, int int_ges) {
         Gestures[0] = 2;
         HandCode();
         WristRA[0] = 30;
+        WristRA_Lock();
         break;
 
       case 7: /* Thumbs Down */
@@ -258,6 +263,7 @@ void Gesture_Function(int req_ges, int int_ges) {
         Gestures[0] = 2;
         HandCode();
         WristRA[0] = 240;
+        WristRA_Lock();
         break;
 
       case 8: HighFive(); break;
@@ -281,8 +287,10 @@ void Gesture_Function(int req_ges, int int_ges) {
         Gestures[0] = 7;
         HandCode();
         WristRA[0] = 30;
+        WristRA_Lock();
     }
   }
+  
   /* Force Reset Everything */
   Extended_Position();
   CMD_END();
@@ -308,12 +316,15 @@ void Action_Function(int spec_action, int obj_action) {
       #endif
 
       Search_Position(); /* Randomly Move to find object */
+      Searching = true;
+
       vTaskDelay(pdMS_TO_TICKS(3000)); /* Pause for Wobble */
     }
 
     if (Search_timeout >= 30) {
       Search_timeout = 0;
       CMD_END();
+      Searching = false;
 
       #if DEBUGSYS
       Serial.println("Object not found, search timed out!");

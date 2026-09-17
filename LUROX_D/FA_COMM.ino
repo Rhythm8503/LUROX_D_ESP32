@@ -7,7 +7,7 @@
     LUROX D: Mark II Software
 ***********************************************************************************************/
 
-#define DEBUGSYS true
+#define DEBUGSYS false
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
 
@@ -89,10 +89,10 @@ void K210_Handle() {
     }
   }
   #if DEBUGSYS
-  Serial.print("ObjX ="); 
-  Serial.println(objX);
-  Serial.print("ObjY =");
-  Serial.println(objY);
+    Serial.print("ObjX ="); 
+    Serial.println(objX);
+    Serial.print("ObjY =");
+    Serial.println(objY);
   #endif
 }
 
