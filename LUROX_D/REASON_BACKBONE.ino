@@ -13,7 +13,7 @@ const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
-#define STEP_DELAY_MS  10   /* dwell per micro-step so servos physically settle */
+#define STEP_DELAY_MS  15   /* dwell per micro-step so servos physically settle */
 #define DEBUGSYS true
 
 /***************************************************************************************** 
@@ -109,7 +109,7 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50]) { //
         Move_Arm_Pose(th_out);
 
         /* dwell so the servos reach the pose before the next step */
-        delay(STEP_DELAY_MS);
+        vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
 
         /* chain the solved pose forward as the next seed */
         memcpy(seed, th_out, sizeof(seed));
@@ -196,7 +196,7 @@ void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_inp
     switch (current_node) {
         case HALT:   Halt_Function(); break;
         case GESTURE: Gesture_Function(req_input, int_input); break;
-        case ACTION: Action_Function(spec_input, obj_input); break;
+        case ACTION: Action_Function(int_input, spec_input, obj_input); break;
         default: break;
     }
 }
@@ -296,7 +296,7 @@ void Gesture_Function(int req_ges, int int_ges) {
   CMD_END();
 }
 
-void Action_Function(int spec_action, int obj_action) {
+void Action_Function(int int_input, int spec_action, int obj_action) {
   #if DEBUGSYS
     Serial.println("Action Activated!");
   #endif
@@ -310,38 +310,46 @@ void Action_Function(int spec_action, int obj_action) {
 
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
-    for (Search_timeout < 30; Search_timeout++;) {
+    for (Search_timeout < 10; Search_timeout++;) {
       #if DEBUGSYS
         Serial.println("Searching for Object!");
       #endif
 
-      Search_Position(); /* Randomly Move to find object */
-      Searching = true;
+      /* Move relative to cycle */
+      Search_Position(Search_timeout); 
 
-      vTaskDelay(pdMS_TO_TICKS(3000)); /* Pause for Wobble */
+      if (ACT_Break == true) {
+        #if DEBUGSYS
+          Serial.println("Force Halt!");
+        #endif
+
+        CMD_END();
+        break;
+      }
     }
 
-    if (Search_timeout >= 30) {
+    if (Search_timeout >= 11) {
       Search_timeout = 0;
       CMD_END();
       Searching = false;
 
       #if DEBUGSYS
-      Serial.println("Object not found, search timed out!");
+        Serial.println("Object not found, search timed out!");
       #endif
 
       break;
     }
   }
 
+  /* Object Found, Centering with Object */
   if (ObjFound == true && HandTrack == false) {
-    while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Until the function centers the object, it will run */
+    while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) {  /* Until the function centers the object, it will run */
       HandInv_Timeout++;
       #if DEBUGSYS
         Serial.println("Attempting to Align!");
       #endif
 
-      if (HandInv_Timeout > 100) {
+      if (HandInv_Timeout > 250) {
         ObjFound = false;
         CMD_END();
 
@@ -368,7 +376,8 @@ void Action_Function(int spec_action, int obj_action) {
       #endif
     }
   }
-
+  
+  /* Object Location determined, moving to object and completing action */
   if (ObjFound == true && HandTrack == true) {
     #if DEBUGSYS
       Serial.println("Grabbing Object!");
@@ -380,10 +389,17 @@ void Action_Function(int spec_action, int obj_action) {
 
     Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
+    ArmYA_Lock();
+    WristRA_Lock();
+    vTaskDelay(pdMS_TO_TICKS(5000)); /* Hold and Wait */
+
+    /* Based on Intention with Object */
+    if (int_input == 3) Push_Obj();
+    if (int_input == 4) Pull_Obj();
+    else Extended_Position(); /* Bring to Home */
 
     CMD_END(); /* End Function, Objective Achieved */
     }
-  }
 }
 
 void CMD_END() {

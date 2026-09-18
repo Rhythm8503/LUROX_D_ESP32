@@ -247,7 +247,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   uint16_t joint5Neutral = 135;
   uint16_t joint6Neutral = 90;
 
-  const uint8_t joint5Limits[2] = { 30, 240 }; /* 135 is Nominal, range from 30 to 240 */
+  const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 240 */
   const uint8_t joint6Limits[2] = { 30, 110 }; /* 90 is Nominal, range from 60 to 120 */
 
   const uint8_t CenterX = 112;

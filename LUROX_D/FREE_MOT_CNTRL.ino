@@ -282,7 +282,7 @@ void WRRA_Mot(void* pvParameters) {
         delayMicroseconds(500);
       }
 
-      if (CMD_PROC == true && Grab == false) digitalWrite(FR_EN, HIGH); /* Disable Motor after movement to limit EMI */
+      if (Grab == false) digitalWrite(FR_EN, HIGH);  /* Disable Motor after movement to limit EMI */
 
       WristRA[1] = WristRA[0]; 
       xSemaphoreGive(motorSemaphore);
@@ -521,7 +521,7 @@ void Pinky_Mot(void* pvParameters) {
 void Sensor_Feedback(void* pvParameters) {
 
   #if DEBUGSYS
-  Serial.println("Sensor Gathering Task Handle Opened");
+    Serial.println("Sensor Gathering Task Handle Opened");
   #endif
 
   while (1) {

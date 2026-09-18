@@ -20,12 +20,15 @@ void Standby() {  // Wander
   Serial.println("Position Change");
   #endif
 
-  ArmPA[0] = random(135, 155);    //Shoulder Pitch
-  ArmRA[0] = random(127, 133);    //Shoulder Roll
+  ArmPA[0] = random(150, 180);    //Shoulder Pitch
+  ArmRA[0] = random(130, 140);    //Shoulder Roll
   ArmYA[0] = random(125, 145);     //Shoulder Yaw
-  ElbowPA[0] = random(145, 200);  //Elbow Pitch
-  WristPA[0] = random(90, 100);   //Wrist Pitch
-  WristRA[0] = random(115, 155);   //Wrist Roll
+  ElbowPA[0] = random(150, 190);  //Elbow Pitch
+  WristPA[0] = random(50, 100);   //Wrist Pitch
+  WristRA[0] = random(125, 145);   //Wrist Roll
+
+  ArmYA_Lock();
+  WristRA_Lock();
 }
 
 void Sleep() {  // Place Arm to Sleep
@@ -64,15 +67,15 @@ void Extended_Position() { /* Extended out on the XYZ Plane */
   ArmRA[0] = 135;
   ArmPA[0] = 160;
   ArmYA[0] = 135;
-  ArmYA_Lock();
-
   ElbowPA[0] = 190;
   WristRA[0] = 135;
-  WristRA_Lock();
-
   WristPA[0] = 90;
   Gestures[0] = 0; // Open the Hand
+
   HandCode();
+  ArmYA_Lock();
+  WristRA_Lock();
+
 }
 
 void Neutral_Position() { /* Straight Down position */

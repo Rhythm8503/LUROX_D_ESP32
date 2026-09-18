@@ -15,13 +15,66 @@
                                   Mapped Motor Functions
 ******************************************************************************************/
 
-void Search_Position() { // Hunting for Object
+void Search_Position(uint8_t Section) { // Hunting for Object
   #if DEBUGSYS
     Serial.println("Searching for Object!");
   #endif
 
   /* Sweeping Search Mode */
-  /* Freeze for now */
+  /* First Position Sweep */
+  if (Section == 0) {
+    /* Force Move to Position [0, 277, -375.7] */
+    ArmPA[0] = 150;     //Shoulder Pitch
+    ArmRA[0] = 135;     //Shoulder Roll
+    ArmYA[0] = 135;     //Shoulder Yaw
+    ElbowPA[0] = 190;   //Elbow Pitch
+    WristPA[0] = 100;    //Wrist Pitch
+    WristRA[0] = 135;   //Wrist Roll
+    ArmYA_Lock();
+    WristRA_Lock();
+
+    /* Wrist Sweep */
+    for (int Sw = 0; Sw = 5; Sw++) {
+      WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
+      if (ACT_Break == true) break;
+      for (int Sr = 0; Sr = 10; Sr++) {
+        WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
+        WristRA_Lock(); 
+        if (ACT_Break == true) break;
+        vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+      }
+    }
+  }
+
+  /* Pushing Trajectory Sweep 1 - 3 */
+  else if (Section >= 1 && Section <= 3) {
+  uint16_t Traj[3] = {0, (277 + (Section * 25)), -375};
+  Run_Trajectory(Traj, 1);
+
+  for (int Sw = 0; Sw <= 5; Sw++) {
+      WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
+      if (ACT_Break == true) break;
+      for (int Sr = 0; Sr <= 10; Sr++) {
+        WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
+        WristRA_Lock(); 
+        if (ACT_Break == true) break;
+        vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+      }
+    }
+  }
+
+  /* Random Point Search*/
+  else {
+    ArmPA[0] = random(150, 180);    //Shoulder Pitch
+    ArmRA[0] = random(135, 145);    //Shoulder Roll
+    ArmYA[0] = random(125, 145);     //Shoulder Yaw
+    ElbowPA[0] = random(150, 190);  //Elbow Pitch
+    WristRA[0] = random(125, 145);   //Wrist Roll
+    WristPA[0] = random(60, 100);   //Wrist Pitch
+    ArmYA_Lock();
+    WristRA_Lock();
+    vTaskDelay(pdMS_TO_TICKS(3000)); /* Pause for OV5640 Lock On*/
+  }
 }
 
 void Wrist_Wave() { /* Directly Utilize Wrist to Wave */
@@ -107,7 +160,7 @@ void Handshake() {  // Pre-Defined Handshake
     }
     vTaskDelay(pdMS_TO_TICKS(100)); 
   }
-  /* Return the hand back to open */
+    /* Return the hand back to open */
     Gestures[0] = 0;
     HandCode();
 }
@@ -148,10 +201,14 @@ void HighFive() {
                                   Complex Motor Functions
 ******************************************************************************************/
 
-void Push_Obj() {
-
+void Push_Obj(int Push_Pos[3]) {
+  /* Basic Kinematics Push Function */
+  Push_Pos[1] = Push_Pos[1] + 50; /* 50mm Push in Y */
+  Run_Trajectory(Push_Pos, MODE_TOP_DOWN);
 }
 
-void Pull_Obj() {
-
+void Pull_Obj(int Pull_Pos) {
+  /* Basic Kinematics Pull Function */
+  Pull_Pos[1] = Pull_Pos[1] - 50; /* 50mm Pull in Y */
+  Run_Trajectory(Pull_Pos, MODE_TOP_DOWN);
 }

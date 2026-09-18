@@ -22,7 +22,6 @@ unsigned long StepperTimer = 0;
 bool CMD_IN = false;   /* Notify when CMD has been received */
 bool CMD_PROC = false; /* Semaphore of when processing is in operation */
 bool ObjFound = false;
-bool Searching = false;
 bool HandTrack = false;
 bool Anim_Break = false;
 bool ACT_Break = false;
