@@ -212,6 +212,7 @@ void Halt_Function() {
   K210_Write_HALT(); /* Force Halt, even if the instruction came from the K210 */
   ACT_Break = true;
   Anim_Break = true;
+  Open_Hand(); /* Open hand*/
   CMD_END();
 }
 

@@ -93,6 +93,12 @@ void Neutral_Position() { /* Straight Down position */
   HandCode();
 }
 
+void Open_Hand() {
+  Gestures[0] = 1;
+  HandCode();
+  Grab = false;
+}
+
 /***************************************************************************************** 
                                   Motor Safety Functions
 ******************************************************************************************/

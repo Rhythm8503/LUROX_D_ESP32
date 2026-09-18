@@ -26,22 +26,22 @@ void FreeRTOS_Initalization() {
 
   /* FreeRTOS Thread Management Initalization */
   motorSemaphore = xSemaphoreCreateCounting(MAX_CONCURRENT_MOTORS, MAX_CONCURRENT_MOTORS);
-  fingerSemaphore = xSemaphoreCreateCounting(MAX_FINGERCONCURRENT_MOTORS,MAX_FINGERCONCURRENT_MOTORS);
+  fingerSemaphore = xSemaphoreCreateCounting(MAX_FINGERCONCURRENT_MOTORS, MAX_FINGERCONCURRENT_MOTORS);
 
 
-  xTaskCreatePinnedToCore(ARMYA_Mot, "Shoulder Yaw", 10000, NULL, 0, &ArmYAMot, 1);
-  xTaskCreatePinnedToCore(ARMPA_Mot, "Shoulder Pitch", 10000, NULL, 0, &ArmPAMot, 1);
-  xTaskCreatePinnedToCore(ARMRA_Mot, "Shoulder Roll", 10000, NULL, 0, &ArmRAMot, 1);
-  xTaskCreatePinnedToCore(ELPA_Mot, "Elbow Pitch", 10000, NULL, 0, &ElbowPAMot, 1);
-  xTaskCreatePinnedToCore(WRPA_Mot, "Wrist Pitch", 10000, NULL, 0, &WristPAMot, 1);
-  xTaskCreatePinnedToCore(WRRA_Mot, "Wrist Roll", 10000, NULL, 0, &WristRAMot, 1);
+  xTaskCreatePinnedToCore(ARMYA_Mot, "Shoulder Yaw", 8192, NULL, 0, &ArmYAMot, 1);
+  xTaskCreatePinnedToCore(ARMPA_Mot, "Shoulder Pitch", 8192, NULL, 0, &ArmPAMot, 1);
+  xTaskCreatePinnedToCore(ARMRA_Mot, "Shoulder Roll", 8192, NULL, 0, &ArmRAMot, 1);
+  xTaskCreatePinnedToCore(ELPA_Mot, "Elbow Pitch", 8192, NULL, 0, &ElbowPAMot, 1);
+  xTaskCreatePinnedToCore(WRPA_Mot, "Wrist Pitch", 8192, NULL, 0, &WristPAMot, 1);
+  xTaskCreatePinnedToCore(WRRA_Mot, "Wrist Roll", 8192, NULL, 0, &WristRAMot, 1);
   xTaskCreatePinnedToCore(Thumb_Mot, "Thumb Motor", 4096, NULL, 0, &ArmPAMot, 1);
   xTaskCreatePinnedToCore(Index_Mot, "Index Motor", 4096, NULL, 0, &ArmPAMot, 1);
   xTaskCreatePinnedToCore(Middle_Mot, "Middle Motor", 4096, NULL, 0, &ArmPAMot, 1);
   xTaskCreatePinnedToCore(Ring_Mot, "Ring Motor", 4096, NULL, 0, &ArmPAMot, 1);
   xTaskCreatePinnedToCore(Pinky_Mot, "Pinky Motor", 4096, NULL, 0, &ArmPAMot, 1);
   
-  xTaskCreatePinnedToCore(Sensor_Feedback, "Sensor Feedback", 20000, NULL, 1, &Feedback, 0);
+  xTaskCreatePinnedToCore(Sensor_Feedback, "Sensor Feedback", 16384, NULL, 1, &Feedback, 0);
   
   #if DEBUGSYS
   Serial.println("FreeRTOS Tasks have been Handled");
