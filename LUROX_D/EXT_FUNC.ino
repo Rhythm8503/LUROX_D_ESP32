@@ -98,20 +98,22 @@ void Neutral_Position() { /* Straight Down position */
 ******************************************************************************************/
 
 void WristRA_Lock() {
-  while(WristRA[1] != WristRA[0]) {
-        vTaskDelay(pdMS_TO_TICKS(1)); /* Waiting for Function Completion */
-        if (millis() - FR_currentTime) > 5000) {
-            break;                    /* Force break after 3 seconds */
-        }
+  unsigned long lockstart_FR = millis();
+  while(abs(WristRA[1] - WristRA[0]) > 1) {
+    vTaskDelay(pdMS_TO_TICKS(1));         /* Waiting for Function Completion */
+    if (millis() - lockstart_FR) > 5000) {
+      break;                              /* Force break after 5 seconds */
+    }
   }
 }
 
 void ArmYA_Lock() {
-  while(ArmYA[1] != ArmYA[0]) {
-        vTaskDelay(pdMS_TO_TICKS(1)); /* Waiting for Function Completion */
-        if (millis() - SHY_currentTime) > 7500) {
-            break;                    /* Force break after 3 seconds */
-        }
+  unsigned long lockstart_SHY = millis();
+  while(abs(ArmYA[1] - ArmYA[0]) > 1) {
+    vTaskDelay(pdMS_TO_TICKS(1));         /* Waiting for Function Completion */
+    if (millis() - lockstart_SHY) > 7500) {
+        break;                            /* Force break after 7.5 seconds */
+    }
   }
 }
 

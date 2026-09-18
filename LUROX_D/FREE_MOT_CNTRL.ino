@@ -21,11 +21,6 @@ void ARMYA_Mot(void* pvParameters) {
   #endif
 
   while (1) {
-    /* Motor PID setup */
-    SHY_currentTime = millis(); //Present
-    SHY_deltaTime = (SHY_currentTime = SHY_prevTime); //Delta
-    SHY_prevTime = SHY_currentTime; //Record
-
     if (abs(ArmYA[0] - ArmYA[1]) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
@@ -33,13 +28,7 @@ void ARMYA_Mot(void* pvParameters) {
       Serial.println("Shoulder Yaw Change!");
       #endif
 
-      SHY_Error = (ArmYA[0] - ArmYA[1]);  //AS5600 Angle Reading vs Desired -> Similar to ArmYA[0] - ArmYA[1] However now closed loop.
-      SHY_eDot = ((SHY_Error - SHY_prevError) / SHY_deltaTime);
-      SHY_EInt += (SHY_Error * SHY_deltaTime);
-
-      KSUM_SHY = (Kp * SHY_Error) + (Ki * SHY_EInt) + (Kd * SHY_eDot); /* Wow PID! */
-      SHY_prevError = SHY_Error;
-
+      int SHY_Error = (ArmYA[0] - ArmYA[1]);  /* Desired - Actual Angle */
       bool SDir = (SHY_Error  >= 0);  // 1 for positive, 0 for negative;
       digitalWrite(SHY_DIR, SDir);
 
@@ -247,25 +236,14 @@ void WRRA_Mot(void* pvParameters) {
   #endif
   
   while (1) {
-  /* Motor PID setup */
-  FR_currentTime = millis(); //Present
-  FR_deltaTime = (FR_currentTime = FR_prevTime); //Delta
-  FR_prevTime = FR_currentTime; //Record
-
     if (abs(WristRA[0] - WristRA[1]) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
       #if DEBUGSYS
-      Serial.println("Wrist Roll Change!");
+        Serial.println("Wrist Roll Change!");
       #endif
 
-      FR_Error = (WristRA[0] - WristRA[1]);  //AS5600 Angle Reading vs Desired -> Similar to ArmYA[0] - ArmYA[1] However now closed loop.
-      FR_eDot = ((FR_Error - FR_prevError) / FR_deltaTime);
-      FR_EInt += (FR_Error * FR_deltaTime);
-
-      KSUM_FR = (Kp * FR_Error) + (Ki * FR_EInt) + (Kd * FR_eDot); /* Wow PID! */
-      FR_prevError = FR_Error;
-
+      int FR_Error = (WristRA[0] - WristRA[1]);  /* Desired vs Current Angle*/
       bool FDir = (FR_Error>= 0);        // Call Direction
       digitalWrite(FR_DIR, FDir);
 
@@ -282,7 +260,7 @@ void WRRA_Mot(void* pvParameters) {
         delayMicroseconds(500);
       }
 
-      if (Grab == false) digitalWrite(FR_EN, HIGH);  /* Disable Motor after movement to limit EMI */
+      if (Grab == false) digitalWrite(FR_EN, HIGH);  /* Disable Motor after movement */
 
       WristRA[1] = WristRA[0]; 
       xSemaphoreGive(motorSemaphore);

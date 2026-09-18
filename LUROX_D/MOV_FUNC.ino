@@ -34,12 +34,14 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     WristRA_Lock();
 
     /* Wrist Sweep */
-    for (int Sw = 0; Sw = 5; Sw++) {
+    for (int Sw = 0; Sw <= 5; Sw++) {
       WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
       if (ACT_Break == true) break;
-      for (int Sr = 0; Sr = 10; Sr++) {
+      if (ObjFound) break;
+      for (int Sr = 0; Sr <= 10; Sr++) {
         WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
         WristRA_Lock(); 
+        if (ObjFound) break;
         if (ACT_Break == true) break;
         vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
       }
@@ -48,19 +50,21 @@ void Search_Position(uint8_t Section) { // Hunting for Object
 
   /* Pushing Trajectory Sweep 1 - 3 */
   else if (Section >= 1 && Section <= 3) {
-  uint16_t Traj[3] = {0, (277 + (Section * 25)), -375};
-  Run_Trajectory(Traj, 1);
+    double Traj[3] = {0, (277 + (Section * 25)), -375};
+    Run_Trajectory(Traj, 1);
 
-  for (int Sw = 0; Sw <= 5; Sw++) {
-      WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
-      if (ACT_Break == true) break;
-      for (int Sr = 0; Sr <= 10; Sr++) {
-        WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
-        WristRA_Lock(); 
+    for (int Sw = 0; Sw <= 5; Sw++) {
+        WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
         if (ACT_Break == true) break;
-        vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+        if (ObjFound) break;
+        for (int Sr = 0; Sr <= 10; Sr++) {
+          WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
+          WristRA_Lock(); 
+          if (ObjFound) break;
+          if (ACT_Break == true) break;
+          vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+        }
       }
-    }
   }
 
   /* Random Point Search*/
@@ -201,13 +205,13 @@ void HighFive() {
                                   Complex Motor Functions
 ******************************************************************************************/
 
-void Push_Obj(int Push_Pos[3]) {
+void Push_Obj(double Push_Pos[3]) {
   /* Basic Kinematics Push Function */
   Push_Pos[1] = Push_Pos[1] + 50; /* 50mm Push in Y */
   Run_Trajectory(Push_Pos, MODE_TOP_DOWN);
 }
 
-void Pull_Obj(int Pull_Pos) {
+void Pull_Obj(double Pull_Pos) {
   /* Basic Kinematics Pull Function */
   Pull_Pos[1] = Pull_Pos[1] - 50; /* 50mm Pull in Y */
   Run_Trajectory(Pull_Pos, MODE_TOP_DOWN);

@@ -75,7 +75,7 @@ def set_led_ring(brightness_values, color):
     led_data = []
     for brightness in brightness_values:
         if brightness > 1:
-            led_value = (((0xe0 | (brightness * 2)) << 24) | set_color)
+            led_value = (((0xe0 | (brightness & 0x1F)) << 24) | set_color)
         else:
             led_value = 0xe0000000
         led_data.append(led_value)

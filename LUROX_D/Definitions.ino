@@ -208,38 +208,6 @@ const int node_input_max[] = {
   22  /* Max Input for Specification, Restricted */
 };
 
-/* ################################################################################################ */
-
-/* AS5600 Magnetic PID Controller */
-const double Kp = 1.3;
-const double Ki = 0.0005;
-const double Kd = 0.01;
-
-float KSUM_FR = 0.0;
-float FR_Error;
-float FR_eDot;
-float FR_EInt;
-float FR_Pos;
-float FR_prevError = 0.0;
-
-float KSUM_SHY = 0.0;
-float SHY_Error;
-float SHY_eDot;
-float SHY_EInt;
-float SHY_Pos;
-float SHY_prevError = 0.0;
-
-float FR_currentTime = 0;
-float FR_deltaTime = 0;
-float FR_prevTime = 0;
-float SHY_currentTime = 0;
-float SHY_deltaTime = 0;
-float SHY_prevTime = 0;
-
-/* ################################################################################################ */
-
-/* AS5600 Angle System */
-const float COUNTS_PER_DEGREE = 4096.0 / 360.0;
 
 /***************************************************************************************** 
                               Boolean/Semaphore Definitions

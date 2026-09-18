@@ -167,7 +167,9 @@ void Decision_Backbone(int req_input, int int_input, int spec_input, int obj_inp
       Serial.println("Processing Command");
     #endif
 
-    CMD_PROC = true;
+    CMD_PROC = true;     /* Declare in progress */
+    ACT_Break = false;   /* Reset */
+    Anim_Break = false;  /* Reset */
     Node current_node = REQUEST;
 
     while (current_node <= SPECIFICATION_RESTRICTED) { /* Only Layers 1 - 5 will be processed */
@@ -310,14 +312,14 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
 
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
-    for (Search_timeout < 10; Search_timeout++;) {
+    for (; Search_timeout < 10; Search_timeout++;) {
       #if DEBUGSYS
         Serial.println("Searching for Object!");
       #endif
 
       /* Move relative to cycle */
       Search_Position(Search_timeout); 
-
+      if (ObjFound) break;
       if (ACT_Break == true) {
         #if DEBUGSYS
           Serial.println("Force Halt!");
@@ -328,10 +330,9 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       }
     }
 
-    if (Search_timeout >= 11) {
+    if (Search_timeout >= 10) {
       Search_timeout = 0;
       CMD_END();
-      Searching = false;
 
       #if DEBUGSYS
         Serial.println("Object not found, search timed out!");
@@ -394,8 +395,8 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     vTaskDelay(pdMS_TO_TICKS(5000)); /* Hold and Wait */
 
     /* Based on Intention with Object */
-    if (int_input == 3) Push_Obj();
-    if (int_input == 4) Pull_Obj();
+    if (int_input == 3) Push_Obj(Obj_Pos);
+    else if (int_input == 4) Pull_Obj(Obj_Pos);
     else Extended_Position(); /* Bring to Home */
 
     CMD_END(); /* End Function, Objective Achieved */
