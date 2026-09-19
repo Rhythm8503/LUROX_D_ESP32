@@ -296,6 +296,68 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   return 0; /* Actively Tracking for Object */
 }
 
+/*****************************************************************************************
+                            Camera Orientation Function
+******************************************************************************************/
+
+/* Camera Orientation States (Relative to Right Side Up) */
+#define CAM_UPRIGHT    0   /* Optical axis in the +Y half-space (Right Side Up)   */
+#define CAM_INVERTED   1   /* Optical axis in the -Y half-space (Upside Down)     */
+#define CAM_SIDEWAYS   2   /* Optical axis rolled off the Y-Z plane (Sideways)    */
+
+#define CAM_PLANE_TOL 0.7071  /* 45 Degrees off the Y-Z pitch plane = Sideways */
+
+int8_t Cam_Orientation(double theta_deg[4], float A5, float A6,
+                       float* Roll_Deg, float Opt_Axis[3], float Img_Up[3], double End_Pos[3]) {
+  /* Camera Orientation -> How much the camera has rotated relative to Right Side Up
+     Roll_Deg : Signed rotation about the global X axis. 0 = Right Side Up reference (facing +Y),
+                +/-180 = Fully Upside Down (neutral arm), negative tilt faces the ground,
+                positive tilt faces the sky. |Roll_Deg| <= 90 = Right Side Up region.
+                NAN when the optical axis sits on the +/-X axis (Sideways).
+     Opt_Axis : Global unit vector the camera looks along (Method of Travel).
+     Img_Up   : Global unit vector of the image up direction.
+     End_Pos  : Global XYZ position of the hand end-effector.
+     Returns CAM_UPRIGHT, CAM_INVERTED, CAM_SIDEWAYS or -1 on bad arguments */
+
+  if (!Roll_Deg) return -1;
+
+  double pos[3];
+  double R_arm[3][3];
+  double phi_roll  = DEG_TO_RAD((double)A5 - 225.0); /* Same shift as Hand_Fwrd_Kin */
+  double phi_pitch = DEG_TO_RAD((double)A6);
+
+  double sp = sin(phi_pitch), cp = cos(phi_pitch);
+  double sr = sin(phi_roll),  cr = cos(phi_roll);
+
+  /* 1. Hand end-effector position and orientation in global space (Joints 1 - 4) */
+  Pos_Fwrd_Kin(theta_deg, pos, R_arm);
+
+  /* 2. Optical axis and image up in the hand frame (rigid with Hand_Fwrd_Kin) */
+  double opt_h[3] = {  sp * cr,  sp * sr, -cp };
+  double up_h[3]  = { -cp * cr, -cp * sr, -sp };
+
+  /* 3. Rotate the hand frame vectors into global space */
+  double opt_g[3], up_g[3];
+  mat_vec_mul(R_arm, opt_h, opt_g);
+  mat_vec_mul(R_arm, up_h, up_g);
+
+  /* 4. Rotation angle in the global Y-Z pitch plane (about the X axis) */
+  double plane_mag = sqrt((opt_g[1] * opt_g[1]) + (opt_g[2] * opt_g[2]));
+  *Roll_Deg = (plane_mag > 1e-6) ? (float)RAD_TO_DEG(atan2(opt_g[2], opt_g[1])) : (float)NAN;
+
+  /* 5. Orientation state relative to Right Side Up */
+  int8_t state;
+  if (fabs(opt_g[0]) > CAM_PLANE_TOL) state = CAM_SIDEWAYS;
+  else if (opt_g[1] >= 0.0)           state = CAM_UPRIGHT;
+  else                                state = CAM_INVERTED;
+
+  if (Opt_Axis) { Opt_Axis[0] = opt_g[0]; Opt_Axis[1] = opt_g[1]; Opt_Axis[2] = opt_g[2]; }
+  if (Img_Up)   { Img_Up[0] = up_g[0];   Img_Up[1] = up_g[1];   Img_Up[2] = up_g[2]; }
+  if (End_Pos)  { End_Pos[0] = pos[0];   End_Pos[1] = pos[1];   End_Pos[2] = pos[2]; }
+
+  return state;
+}
+
 void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {
     double wrist_pos[3];
     double R_arm[3][3];
