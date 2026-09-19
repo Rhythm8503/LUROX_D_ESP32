@@ -306,9 +306,10 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
 
   /* Start Function */
   ACT_Break = false;
-  uint8_t Search_timeout = 0;
-  uint16_t HandInv_Timeout = 0;
-  bool Attempt = false; /* Another attempt before total timeout */
+  uint8_t Search_timeout = 0;     /* Trying to find Object */
+  uint16_t HandInv_Timeout = 0;   /* Trying to Center */
+  bool Attempt = false;           /* Another attempt before total timeout */
+  int32_t Cam_Centered = 0;       /* State machine for finding object */
 
   while((ACT_Break == false) && (CMD_PROC == true)) {
 
@@ -349,7 +350,8 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     #if DEBUGSYS
         Serial.println("Running Alignment Function");
     #endif
-    while (!Hand_CenterCam(objX[0], objY[0], WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) {  /* Until the function centers the object, it will run */
+    while (!(Cam_Centered == 1)) {  /* Until the function centers the object, it will run */
+      Cam_Centered = Hand_CenterCam(objX[0], objY[0], WristRA[1], WristPA[1], &WristRA[0], &WristPA[0]);
       HandInv_Timeout++;
       WristRA_Lock(); /* Wait for Wrist to fully rotate before attempting again */
       vTaskDelay(pdMS_TO_TICKS(1500)); /* Wait for motor movement + OV5640 sensor gathering */
@@ -357,11 +359,19 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
         Serial.println("Attempting to Align!");
       #endif
 
+      if (Cam_Centered == 1 && ObjFound == true) { /* Once it has found the object it will progress */
+        HandTrack = true;
+        #if DEBUGSYS
+          Serial.println("ALIGNED! Attempting to Grab!");
+        #endif
+      }
+
       if (HandInv_Timeout > 50 && Attempt == false) {
         /* The object was found previously, try searching again and seeing if it can be aligned */
         ObjFound = false;
         Attempt = true;  
         HandInv_Timeout = 0;
+        Search_timeout = 0;
 
         #if DEBUGSYS
           Serial.println("Timeout Alignment, Attempting Search!");
@@ -388,13 +398,6 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
         break;
       }
     }
-
-    if (Hand_CenterCam(objX[0], objY[0], WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
-      HandTrack = true;
-      #if DEBUGSYS
-        Serial.println("ALIGNED! Attempting to Grab!");
-      #endif
-    }
   }
   
   /* Object Location determined, moving to object and completing action */
@@ -411,14 +414,14 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
     WristRA_Lock();
-    vTaskDelay(pdMS_TO_TICKS(5000)); /* Hold and Wait */
+    vTaskDelay(pdMS_TO_TICKS(5000));                                    /* Hold and Wait */
 
-    /* Based on Intention with Object */
+                                                                        /* Based on Intention with Object */
     if (int_input == 3) Push_Obj(Obj_Pos);
     else if (int_input == 4) Pull_Obj(Obj_Pos);
-    else Extended_Position(); /* Bring to Home */
+    else Extended_Position();                                           /* Bring to Home */
 
-    CMD_END(); /* End Function, Objective Achieved */
+    CMD_END();                                                          /* End Function, Objective Achieved */
     }
   }
 }
@@ -428,13 +431,20 @@ void CMD_END() {
         Serial.println("Function Ended, returning back to main state!");
   #endif
 
+  /* Reset Variables back to original states */
   request = 0;
   intent = 0;
   specification = 0;
   objective = 0;
+  objX[0] = 0;
+  objY[0] = 0;
+  objX[1] = 0; 
+  objY[1] = 0;
 
   CMD_PROC = false;
   CMD_IN = false;
+  ObjFound == false;
+  HandTrack == false;
 
   K210_Write_HALT();
 }

@@ -240,27 +240,25 @@ float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, floa
 
 int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* A5N, uint8_t* A6N) {
   /* Verify new X,Y have been achieved before moving to prevent runaway */
-  if ((abs(CamX - objX[1]) > 1) && (abs(CamY - objY[1]) > 1)) {
+  if ((fabsf(CamX - objX[1]) > 1) || (fabsf(CamY - objY[1]) > 1)) {
   // Iteration Method of Inverse Kinematics
-  if (!A5N || !A6N) return 1;
+  if (!A5N || !A6N) return -1;
 
   const float Kp = 0.5;  // Proportional Gain
+  const float DEG_PER_PX = 0.2; 
+  const float MAX_STEP = 20;
 
-  uint16_t joint5Neutral = 135;
-  uint16_t joint6Neutral = 90;
-
-  const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 240 */
-  const uint8_t joint6Limits[2] = { 30, 110 }; /* 90 is Nominal, range from 60 to 120 */
+  const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
+  const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
 
   const uint8_t CenterX = 112;
   const uint8_t CenterY = 112;
   const uint8_t DEADZONE = 16;
 
-
-  if (CamX < 0 || CamY < 0 || isnan(CamX) || isnan(CamY)) {
-    *A5N = round(A5); // Retain current joint angle
-    *A6N = round(A6); // Retain current joint angle
-    return -1;  // Target lost, holding position
+  if ((CamX <= 1 && CamY <= 1) || (CamX >= 254 && CamY >= 254)) {
+    *A5N = round(A5);
+    *A6N = round(A6);
+    return -1;  /* target lost, hold */
   }
 
   // Error from Center
@@ -283,23 +281,25 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   float targetRollDeg = RAD_TO_DEG(atan2(ErrorY, ErrorX));
   float rollError = 90.0 - targetRollDeg;
   rollError = fmodf((rollError + 180.0), 360.0);
-
-  if (rollError < 0) rollError += 360.0;
   rollError -= 180.0;
 
-  float pitchError = Cam_DistR * cos(DEG_TO_RAD(rollError));
+  float pitchError = Cam_DistR * cos(DEG_TO_RAD(rollError)) * DEG_PER_PX;
 
   // 4. Update Kinematics proportionally
-  float nextA5 = A5 + (Kp * rollError);
-  float nextA6 = A6 + (Kp * pitchError);
+  float rollStep  = constrain(Kp * rollError, -MAX_STEP, MAX_STEP);
+  float pitchStep = constrain(Kp * pitchError, -MAX_STEP, MAX_STEP);
 
   // Constrain to angles
-  *A5N = (int)round(constrain(nextA5, joint5Limits[0], joint5Limits[1]));
-  *A6N = (int)round(constrain(nextA6, joint6Limits[0], joint6Limits[1]));
+  *A5N = (int)round(constrain(A5 + rollStep, joint5Limits[0], joint5Limits[1]));
+  *A6N = (int)round(constrain(A6 + pitchStep, joint6Limits[0], joint6Limits[1]));
   objX[1] = CamX; /* Load the Camera values into the Past State */
   objY[1] = CamY;
 
   return 0; /* Actively Tracking for Object */
+  }
+
+  else {
+    return 0; /* Not detected likely! */
   }
 }
 
