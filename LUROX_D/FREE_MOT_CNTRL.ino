@@ -11,7 +11,7 @@
 /***************************************************************************************** 
                                   Arm Position Functions
 ******************************************************************************************/
-#define DEBUGSYS false
+#define DEBUGSYS true
 
 void ARMYA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
@@ -21,7 +21,8 @@ void ARMYA_Mot(void* pvParameters) {
   #endif
 
   while (1) {
-    if (abs(ArmYA[0] - ArmYA[1]) > 1) {  // Initate motor function
+    vTaskDelay(pdMS_TO_TICKS(1));
+    if ((abs(ArmYA[0] - ArmYA[1])) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
       #if DEBUGSYS
@@ -35,9 +36,6 @@ void ARMYA_Mot(void* pvParameters) {
       /* Include function to convert angles to step, 400 steps = 360 */
       uint32_t SHY_steps = (round(abs(SHY_Error) / 0.9)) * 16;
 
-      // Enable Motor
-      digitalWrite(SHY_EN, LOW);
-      vTaskDelay(pdMS_TO_TICKS(5));
       for (int St = 0; St < SHY_steps; St++) {
         digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
         delayMicroseconds(500);        // Adjust for motor speed
@@ -46,10 +44,9 @@ void ARMYA_Mot(void* pvParameters) {
       }
 
       // Update Position history
-      ArmYA[1] = ArmYA[0];
       xSemaphoreGive(motorSemaphore);
+      ArmYA[1] = ArmYA[0];
       vTaskDelay(pdMS_TO_TICKS(200));
-      //digitalWrite(SHY_EN, HIGH);
     }
   }
 }
@@ -83,9 +80,9 @@ void ARMPA_Mot(void* pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(APA_DelayMs)); // Non-blocking RTOS delay
       }
 
+      xSemaphoreGive(motorSemaphore);
       ArmPA[2] = ArmPA[1];
       ArmPA[1] = ArmPA[0];  // Log
-      xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(50));
     }
     else {
@@ -126,9 +123,9 @@ void ARMRA_Mot(void* pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(ARA_DelayMs)); // Non-blocking RTOS delay
       }
 
+      xSemaphoreGive(motorSemaphore);
       ArmRA[2] = ArmRA[1];
       ArmRA[1] = ArmRA[0];  // Log
-      xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(50));
     }
 
@@ -170,9 +167,9 @@ void ELPA_Mot(void* pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(ELP_DelayMs)); // Non-blocking RTOS delay
         }
 
+      xSemaphoreGive(motorSemaphore);
       ElbowPA[2] = ElbowPA[1];
       ElbowPA[1] = ElbowPA[0];
-      xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(50));
     }
 
@@ -214,9 +211,9 @@ void WRPA_Mot(void* pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(WPA_DelayMs)); // Non-blocking RTOS delay
       }
       
+      xSemaphoreGive(motorSemaphore);
       WristPA[2] = WristPA[1];
       WristPA[1] = WristPA[0];  // Log
-      xSemaphoreGive(motorSemaphore);
       vTaskDelay(pdMS_TO_TICKS(50));
     } 
     else {
@@ -236,6 +233,7 @@ void WRRA_Mot(void* pvParameters) {
   #endif
   
   while (1) {
+    vTaskDelay(pdMS_TO_TICKS(1));
     if (abs(WristRA[0] - WristRA[1]) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
@@ -262,8 +260,8 @@ void WRRA_Mot(void* pvParameters) {
 
       if (Grab == false) digitalWrite(FR_EN, HIGH);  /* Disable Motor after movement */
 
-      WristRA[1] = WristRA[0]; 
       xSemaphoreGive(motorSemaphore);
+      WristRA[1] = WristRA[0]; 
       vTaskDelay(pdMS_TO_TICKS(200));
       //digitalWrite(FR_EN, HIGH);
     }
@@ -503,10 +501,8 @@ void Sensor_Feedback(void* pvParameters) {
   #endif
 
   while (1) {
-    vTaskDelay(pdMS_TO_TICKS(5)); // 10ms Poll Period for Sensor Readings
-    K210_Handle();      //Read UART Commands from the K210
-    Bluetooth_Handle(); //Read Commands from BLE Terminal
-    WristRA[2] = HandSensor(); /* Read and Declare Angle */
-    //ArmYA[2] = UpperArmSensor(); /* Read and Declare Angle */  
+    vTaskDelay(pdMS_TO_TICKS(10)); // 10ms Poll Period for Sensor Readings
+    HandSensor(); /* Read and Declare Angle */
+    if (CMD_PROC == true && CMD_IN == true) K210_Handle();      //Read UART Commands from the K210
   }
 }

@@ -64,6 +64,8 @@ void setup() {
 void loop() {  
   //GlobalTimer = millis(); // Keep Track of everything
   vTaskDelay(pdMS_TO_TICKS(1)); //Watchdog Trigger
+  Bluetooth_Handle(); //Read Commands from BLE Terminal
+  if (CMD_PROC == false && CMD_IN == false) K210_Handle();      //Read UART Commands from the K210
 
   /* Standy By Function (For Now) */
 

@@ -8,7 +8,7 @@
 
 ***********************************************************************************************/
 
-#define DEBUGSYS false
+#define DEBUGSYS true
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
 
@@ -105,9 +105,9 @@ void Open_Hand() {
 
 void WristRA_Lock() {
   unsigned long lockstart_FR = millis();
-  while(abs(WristRA[1] - WristRA[0]) > 1) {
+  while(abs(WristRA[0] - WristRA[1]) > 2) {
     vTaskDelay(pdMS_TO_TICKS(1));         /* Waiting for Function Completion */
-    if (millis() - lockstart_FR) > 5000) {
+    if ((millis() - lockstart_FR) > 5000) {
       break;                              /* Force break after 5 seconds */
     }
   }
@@ -115,9 +115,9 @@ void WristRA_Lock() {
 
 void ArmYA_Lock() {
   unsigned long lockstart_SHY = millis();
-  while(abs(ArmYA[1] - ArmYA[0]) > 1) {
+  while(abs(ArmYA[0] - ArmYA[1]) > 2) {
     vTaskDelay(pdMS_TO_TICKS(1));         /* Waiting for Function Completion */
-    if (millis() - lockstart_SHY) > 7500) {
+    if ((millis() - lockstart_SHY) > 7500) {
         break;                            /* Force break after 7.5 seconds */
     }
   }

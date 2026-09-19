@@ -313,7 +313,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
 
   /* Inital Stage Object Search */
   if (ObjFound == false && HandTrack == false) {
-    for (; Search_timeout < 10; Search_timeout++;) {
+    for (; Search_timeout < 10; Search_timeout++) {
       #if DEBUGSYS
         Serial.println("Searching for Object!");
       #endif
@@ -402,6 +402,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
 
     CMD_END(); /* End Function, Objective Achieved */
     }
+  }
 }
 
 void CMD_END() {

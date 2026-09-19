@@ -129,8 +129,7 @@ void Motor_Initalization() {
   pinMode(SHY_DIR, OUTPUT);
   pinMode(SHY_STEP, OUTPUT);
   pinMode(SHY_EN, OUTPUT);
-  pinMode(SHY_HallEffect, INPUT);
-  digitalWrite(SHY_EN, HIGH);
+  digitalWrite(SHY_EN, LOW);
 
   #if DEBUGSYS
   Serial.println("Shoulder Stepper Initalized");
@@ -139,7 +138,6 @@ void Motor_Initalization() {
   pinMode(FR_DIR, OUTPUT);
   pinMode(FR_STEP, OUTPUT);
   pinMode(FR_EN, OUTPUT);
-  pinMode(FR_HallEffect, INPUT);
   digitalWrite(FR_EN, HIGH);
 
   #if DEBUGSYS
@@ -218,11 +216,11 @@ void UART_Test() {
   while(K210_Test) {
   TimeoutCounter++;
   vTaskDelay(pdMS_TO_TICKS(10)); /* Slight Delay */
-  while(1) {
-    //Hold this here
-    delay(10);
-    K210_Handle(); /* Print if recieved */
-  }
+  // while(1) {
+  //   //Hold this here
+  //   delay(10);
+  //   K210_Handle(); /* Print if recieved */
+  // }
   if (K210Serial.available()) {
     String receivedData = K210Serial.readStringUntil('\n');
     receivedData.trim(); // Remove any leading/trailing whitespace

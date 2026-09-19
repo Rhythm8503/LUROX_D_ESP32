@@ -7,7 +7,7 @@
     LUROX D: Mark II Software
 
 ***********************************************************************************************/
-#define DEBUGSYS false
+#define DEBUGSYS true
 #define MODE_TOP_DOWN   1
 #define MODE_SIDE_SWIPE 2
 
@@ -211,7 +211,7 @@ void Push_Obj(double Push_Pos[3]) {
   Run_Trajectory(Push_Pos, MODE_TOP_DOWN);
 }
 
-void Pull_Obj(double Pull_Pos) {
+void Pull_Obj(double Pull_Pos[3]) {
   /* Basic Kinematics Pull Function */
   Pull_Pos[1] = Pull_Pos[1] - 50; /* 50mm Pull in Y */
   Run_Trajectory(Pull_Pos, MODE_TOP_DOWN);
