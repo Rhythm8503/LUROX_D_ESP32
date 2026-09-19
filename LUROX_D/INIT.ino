@@ -231,7 +231,7 @@ void UART_Test() {
   
   if (TimeoutCounter > 1024) { // Timeout after 16384 iterations
       Serial.println("UART Communication Failed: No Response from K210");
-      //K210_Test = false; // Exit the loop after timeout
+      K210_Test = false; // Exit the loop after timeout
     }
   }
   }

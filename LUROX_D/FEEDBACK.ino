@@ -32,5 +32,9 @@ void Object_Grasp() {
   }
 }
 
+bool VL53_DataReady() {
+  return IRSen.readReg(VL53L0X::RESULT_INTERRUPT_STATUS) & 0x01;   /* RESULT_INTERRUPT_STATUS, GPIO bit */
+}
+
 
 
