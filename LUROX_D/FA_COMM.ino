@@ -62,8 +62,8 @@ void K210_Handle() {
       case STATE_READING_LAYER2:
         if (layer2_counter < 4) {
           // Store the 4 bytes of Layer 2
-          if (layer2_counter == 0) objX = b;
-          else if (layer2_counter == 1) objY = b;
+          if (layer2_counter == 0) objX[0] = b;
+          else if (layer2_counter == 1) objY[0] = b;
           else if (layer2_counter == 2) objW = b;
           else if (layer2_counter == 3) objH = b;
           layer2_counter++;

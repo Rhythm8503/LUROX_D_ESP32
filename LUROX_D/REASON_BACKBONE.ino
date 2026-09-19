@@ -307,7 +307,8 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
   /* Start Function */
   ACT_Break = false;
   uint8_t Search_timeout = 0;
-  uint8_t HandInv_Timeout = 0;
+  uint16_t HandInv_Timeout = 0;
+  bool Attempt = false; /* Another attempt before total timeout */
 
   while((ACT_Break == false) && (CMD_PROC == true)) {
 
@@ -345,18 +346,35 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
 
   /* Object Found, Centering with Object */
   if (ObjFound == true && HandTrack == false) {
-    while (!Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) {  /* Until the function centers the object, it will run */
+    #if DEBUGSYS
+        Serial.println("Running Alignment Function");
+    #endif
+    while (!Hand_CenterCam(objX[0], objY[0], WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) {  /* Until the function centers the object, it will run */
       HandInv_Timeout++;
+      WristRA_Lock(); /* Wait for Wrist to fully rotate before attempting again */
+      vTaskDelay(pdMS_TO_TICKS(1500)); /* Wait for motor movement + OV5640 sensor gathering */
       #if DEBUGSYS
         Serial.println("Attempting to Align!");
       #endif
 
-      if (HandInv_Timeout > 250) {
+      if (HandInv_Timeout > 50 && Attempt == false) {
+        /* The object was found previously, try searching again and seeing if it can be aligned */
+        ObjFound = false;
+        Attempt = true;  
+        HandInv_Timeout = 0;
+
+        #if DEBUGSYS
+          Serial.println("Timeout Alignment, Attempting Search!");
+        #endif
+        break;
+      }
+
+      if (HandInv_Timeout > 50 && Attempt == true) {
         ObjFound = false;
         CMD_END();
 
         #if DEBUGSYS
-        Serial.println("Timeout Alignment, Cannot grab!");
+          Serial.println("Timeout Alignment, gave up!");
         #endif
         break;
       }
@@ -371,7 +389,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       }
     }
 
-    if (Hand_CenterCam(objX, objY, WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
+    if (Hand_CenterCam(objX[0], objY[0], WristRA[1], WristPA[1], &WristRA[0], &WristPA[0])) { /* Once it has found the object it will progress */
       HandTrack = true;
       #if DEBUGSYS
         Serial.println("ALIGNED! Attempting to Grab!");

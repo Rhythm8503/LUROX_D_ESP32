@@ -162,7 +162,9 @@ uint8_t txValue = 0;
 int state = STATE_WAITING_LAYER;
 int layer1_counter = 0;
 int layer2_counter = 0;
-uint8_t objX, objY, objW, objH; // Object XY and Box Size used to determine Desired Position
+uint8_t objX[2] = {0, 0}; /* Past and Current State */ 
+uint8_t objY[2] = {0, 0}; /* Past and Current State */
+uint8_t objW, objH; // Object XY and Box Size used to determine Desired Position
 char commandBuffer[32];         // Buffer for command parsing
 char originalCommand[32];       // Buffer to store original command for echo
 uint8_t selectedLimb = 0;      

@@ -35,15 +35,15 @@ void Search_Position(uint8_t Section) { // Hunting for Object
 
     /* Wrist Sweep */
     for (int Sw = 0; Sw <= 5; Sw++) {
-      WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
-      if (ACT_Break == true) break;
+      if (ACT_Break == true) break;      /* Break before movement */
       if (ObjFound) break;
+      WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
       for (int Sr = 0; Sr <= 10; Sr++) {
+        if (ObjFound) break;             /* Break before movement */
+        if (ACT_Break == true) break;
         WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
         WristRA_Lock(); 
-        if (ObjFound) break;
-        if (ACT_Break == true) break;
-        vTaskDelay(pdMS_TO_TICKS(2000)); /* Pause for OV5640 Lock On*/
+        vTaskDelay(pdMS_TO_TICKS(2500)); /* Pause for OV5640 Lock On*/
       }
     }
   }
@@ -54,15 +54,15 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     Run_Trajectory(Traj, 1);
 
     for (int Sw = 0; Sw <= 5; Sw++) {
-        WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
-        if (ACT_Break == true) break;
+        if (ACT_Break == true) break;      /* Break before movement */
         if (ObjFound) break;
+        WristPA[0] = 100 - (Sw * 8);       /* Wrist Pitch Slowly 100 -> 60 */
         for (int Sr = 0; Sr <= 10; Sr++) {
+          if (ObjFound) break;             /* Break before movement */
+          if (ACT_Break == true) break;
           WristRA[0] = 100 + (Sr * 8);     /* Wrist Roll Sweep 100 -> 180 */
           WristRA_Lock(); 
-          if (ObjFound) break;
-          if (ACT_Break == true) break;
-          vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+          vTaskDelay(pdMS_TO_TICKS(2500)); /* Pause for OV5640 Lock On*/
         }
       }
   }
@@ -77,7 +77,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     WristPA[0] = random(60, 100);   //Wrist Pitch
     ArmYA_Lock();
     WristRA_Lock();
-    vTaskDelay(pdMS_TO_TICKS(3000)); /* Pause for OV5640 Lock On*/
+    vTaskDelay(pdMS_TO_TICKS(4000)); /* Pause for OV5640 Lock On*/
   }
 }
 

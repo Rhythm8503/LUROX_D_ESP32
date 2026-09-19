@@ -504,11 +504,9 @@ void Sensor_Feedback(void* pvParameters) {
   while (1) {
     vTaskDelay(pdMS_TO_TICKS(10)); // 10ms Poll Period for Sensor Readings
     K210_Handle();                 /* Read UART Commands from the K210 */
-
+    Obj_Dist = IRSen.readRangeContinuousMillimeters(); // Sensor Read
     IR_Counter++;
-    if (VL53_DataReady()) {
-      Obj_Dist = IRSen.readRangeContinuousMillimeters(); // Sensor Read
-    }
+    Object_Grasp();                /* Wait for Object to Grasp */
 
     #if DEBUGSYS
       if (IR_Counter > 1500) { /* After 1500 cycles it will output the distance ~15 - 16 seconds */

@@ -239,6 +239,8 @@ float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, floa
 }
 
 int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* A5N, uint8_t* A6N) {
+  /* Verify new X,Y have been achieved before moving to prevent runaway */
+  if ((abs(CamX - objX[1]) > 1) && (abs(CamY - objY[1]) > 1)) {
   // Iteration Method of Inverse Kinematics
   if (!A5N || !A6N) return 1;
 
@@ -272,6 +274,8 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   if (Cam_DistR < DEADZONE) {
     *A5N = round(A5);
     *A6N = round(A6);
+    objX[1] = CamX;
+    objY[1] = CamY;
     return 1; /* Locked onto Target */
   }
   
@@ -292,8 +296,11 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   // Constrain to angles
   *A5N = (int)round(constrain(nextA5, joint5Limits[0], joint5Limits[1]));
   *A6N = (int)round(constrain(nextA6, joint6Limits[0], joint6Limits[1]));
+  objX[1] = CamX; /* Load the Camera values into the Past State */
+  objY[1] = CamY;
 
   return 0; /* Actively Tracking for Object */
+  }
 }
 
 void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {
