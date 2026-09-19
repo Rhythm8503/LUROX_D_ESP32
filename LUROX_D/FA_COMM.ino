@@ -155,16 +155,19 @@ void handleCommand(char *cmd) {
     if (strcmp(cmd, "STANDARD") == 0) {
       sendResponse("Mode set to STANDARD, enter cmd");
       currentContext = COMMAND_MENU;
+      if (SleepState == true) Wake();
 
     } else if (strcmp(cmd, "MANUAL") == 0) {
       sprintf(response, "Mode set to MANUAL");
       sendResponse(response);
       currentContext = MANUAL_MENU;
+      if (SleepState == true) Wake();
 
     } else if (strcmp(cmd, "SLEEP") == 0) {
       sprintf(response, "Mode set to SLEEP");
       sendResponse(response);
       currentContext = MAIN;
+      Sleep();
 
     } else {
       sendResponse("Invalid mode. Use STANDARD, MANUAL, SLEEP");

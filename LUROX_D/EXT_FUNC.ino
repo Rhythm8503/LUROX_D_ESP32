@@ -15,7 +15,7 @@
 /***************************************************************************************** 
                                  Basic Motor Assignments
 ******************************************************************************************/
-void Standby() {  // Wander
+void Standby() {            /* Random movement for now */
   #if DEBUGSYS
   Serial.println("Position Change");
   #endif
@@ -31,23 +31,27 @@ void Standby() {  // Wander
   WristRA_Lock();
 }
 
-void Sleep() {  // Place Arm to Sleep
+void Sleep() {              /* Place Arm to Sleep */
   #if DEBUGSYS
-  Serial.println("Sleep Mode Activated");
+    Serial.println("Sleep Mode Activated");
   #endif
+
+  Neutral_Position();
+  vTaskDelay(pdMS_TO_TICKS(2000)); /* Time to settle everything */
 
   // Rotate back to home
   digitalWrite(SHY_EN, HIGH);  //Shoulder Yaw Sleep
-  digitalWrite(FR_EN, HIGH);   //Forearm Roll Sleep
 
   //Servo Sleep
   SHR.detach();
   SHP.detach();
   EP.detach();
   FP.detach();
+
+  SleepState = true;
 }
 
-void Wake() {  // Initalizing Objects
+void Wake() {               /* Initalizing Objects */
   #if DEBUGSYS
   Serial.println("Waking Arm Up!");
   #endif
@@ -57,9 +61,12 @@ void Wake() {  // Initalizing Objects
   EP.attach(ELBOW, 500, 2500);
   SHR.attach(SHR_RO, 500, 2500);
   SHP.attach(SHR_PI, 500, 2500);
+
+  digitalWrite(SHY_EN, LOW);  //Shoulder Wake
+  SleepState = false;
 }
 
-void Extended_Position() { /* Extended out on the XYZ Plane */
+void Extended_Position() {  /* Extended out on the XYZ Plane */
   #if DEBUGSYS
   Serial.println("Extending the Arm out!");
   #endif
@@ -78,7 +85,7 @@ void Extended_Position() { /* Extended out on the XYZ Plane */
 
 }
 
-void Neutral_Position() { /* Straight Down position */
+void Neutral_Position() {   /* Straight Down position */
   #if DEBUGSYS
   Serial.println("Returning Arm Back to Home!");
   #endif
@@ -93,7 +100,7 @@ void Neutral_Position() { /* Straight Down position */
   HandCode();
 }
 
-void Open_Hand() {
+void Open_Hand() {          /* Release Grip */
   Gestures[0] = 1;
   HandCode();
   Grab = false;

@@ -21,7 +21,7 @@ void ARMYA_Mot(void* pvParameters) {
   #endif
 
   while (1) {
-    vTaskDelay(pdMS_TO_TICKS(1));
+    vTaskDelay(pdMS_TO_TICKS(1)); /* Minor Delay for function activation */
     if ((abs(ArmYA[0] - ArmYA[1])) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
@@ -233,7 +233,7 @@ void WRRA_Mot(void* pvParameters) {
   #endif
   
   while (1) {
-    vTaskDelay(pdMS_TO_TICKS(1));
+    vTaskDelay(pdMS_TO_TICKS(1)); /* Minor delay for function activation */
     if (abs(WristRA[0] - WristRA[1]) > 1) {  // Initate motor function
       xSemaphoreTake(motorSemaphore, portMAX_DELAY);
 
@@ -499,10 +499,19 @@ void Sensor_Feedback(void* pvParameters) {
   #if DEBUGSYS
     Serial.println("Sensor Gathering Task Handle Opened");
   #endif
+  uint16_t IR_Counter = 0; /* Temporary tracker to make sure distance sensor is alive. */
 
   while (1) {
     vTaskDelay(pdMS_TO_TICKS(10)); // 10ms Poll Period for Sensor Readings
-    HandSensor(); /* Read and Declare Angle */
-    if (CMD_PROC == true && CMD_IN == true) K210_Handle();      //Read UART Commands from the K210
+    IR_Counter++;
+    HandSensor();                  /* Read and Declare Angle */
+    K210_Handle();                 /* Read UART Commands from the K210 */
+
+    #if DEBUGSYS
+      if (IR_Counter > 1500) { /* After 1500 cycles it will output the distance ~15 - 16 seconds */
+        Serial.println(Obj_Dist);
+        IR_Counter = 0;
+      }
+    #endif
   }
 }

@@ -30,7 +30,7 @@ bool ACT_Break = false;
 bool HandRot = false;
 bool SleepT = false;
 bool Grab = false;
-bool Wander = true;
+bool Wander = false;
 bool SleepState = false;
 bool manualMode = false;
 
@@ -63,34 +63,25 @@ void setup() {
 
 void loop() {  
   //GlobalTimer = millis(); // Keep Track of everything
-  vTaskDelay(pdMS_TO_TICKS(1)); //Watchdog Trigger
-  Bluetooth_Handle(); //Read Commands from BLE Terminal
-  if (CMD_PROC == false && CMD_IN == false) K210_Handle();      //Read UART Commands from the K210
+  vTaskDelay(pdMS_TO_TICKS(1));     /* Watchdog Trigger */
+  Bluetooth_Handle();               /* Read Commands from BLE Terminal */
+  Serial_Terminal();                /* Direct Connection from the Computer */
 
-  /* Standy By Function (For Now) */
+  /* Standy By Function */
+  if (((millis() - ResetTimer) > 15000) && Wander == true && SleepState == false) {
+    ResetTimer = millis();
 
-  // if (((millis() - ResetTimer) > 15000) && Wander == true) {
-  //   ResetTimer = millis();
-
-  //   #if DEBUGSYS
-  //   Serial.println("===========================");
-  //   #endif
-  //   Standby();
-  // }
-  /* Kinematics Function */
-  Serial_Terminal();
-
-  /* Sleep Mode */
-  if (Wander == false && SleepState == true) {
-    Neutral_Position();
-    Sleep();    // Power Saving
+    #if DEBUGSYS
+      Serial.println("===========================");
+    #endif
+    Standby();
   }
 
   /* This loop wil primarily focus on the control loop reading information and kinematics instruction to grab objects */
   if (CMD_IN == true && CMD_PROC == false) {
-    Wander = false; // Disable Wandering
-    Extended_Position(); //Return to Standby-State
-    Decision_Backbone(request, intent, specification, objective); /* Actions will be governed */
+    Wander = false;                                                 /* Disable Wandering */
+    Extended_Position();                                            /* Return to Standby-State  */
+    Decision_Backbone(request, intent, specification, objective);   /* Actions will be governed */
   }
 
 }

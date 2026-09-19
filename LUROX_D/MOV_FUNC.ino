@@ -43,7 +43,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
         WristRA_Lock(); 
         if (ObjFound) break;
         if (ACT_Break == true) break;
-        vTaskDelay(pdMS_TO_TICKS(1000)); /* Pause for OV5640 Lock On*/
+        vTaskDelay(pdMS_TO_TICKS(2000)); /* Pause for OV5640 Lock On*/
       }
     }
   }
