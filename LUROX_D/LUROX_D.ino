@@ -55,9 +55,8 @@ void setup() {
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
-    Serial.print("loopTask stack: ");
-    Serial.println(getArduinoLoopTaskStackSize());               /* should print 16384 */
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    Extended_Position(); /* Move the Robotic arm to an extended position*/
 }
 
 /***************************************************************************************** 

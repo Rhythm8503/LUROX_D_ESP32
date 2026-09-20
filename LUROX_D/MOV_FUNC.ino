@@ -232,11 +232,11 @@ void HighFive() {
 void Push_Obj(double Push_Pos[3]) {
   /* Basic Kinematics Push Function */
   Push_Pos[1] = Push_Pos[1] + 50; /* 50mm Push in Y */
-  Run_Trajectory(Push_Pos, MODE_TOP_DOWN);
+  Run_Trajectory(Push_Pos, MODE_SIDE_SWIPE);
 }
 
 void Pull_Obj(double Pull_Pos[3]) {
   /* Basic Kinematics Pull Function */
   Pull_Pos[1] = Pull_Pos[1] - 50; /* 50mm Pull in Y */
-  Run_Trajectory(Pull_Pos, MODE_TOP_DOWN);
+  Run_Trajectory(Pull_Pos, MODE_SIDE_SWIPE);
 }
