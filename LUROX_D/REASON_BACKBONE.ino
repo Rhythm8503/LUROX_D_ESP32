@@ -8,7 +8,7 @@
 
 ***********************************************************************************************/
 
-const double Max_Reach = 750.0;     /* mm  */
+const double Max_Reach = 600.0;     /* mm  */
 const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
@@ -429,8 +429,6 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       Serial.println(Obj_Pos[1]);
       Serial.println(Obj_Pos[2]);
     #endif
-
-    Obj_Pos[1] = Obj_Pos[1] - 100;
 
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();

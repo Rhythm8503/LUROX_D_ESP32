@@ -342,9 +342,9 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     Serial.println("Hand Forward Kinematics Ran");
 
     double cam_origin_global[3];
-    cam_origin_global[0] = wrist_pos[0] + (R_arm[0][2] * -80.0);
-    cam_origin_global[1] = wrist_pos[1] + (R_arm[1][2] * -80.0);
-    cam_origin_global[2] = wrist_pos[2] + (R_arm[2][2] * -80.0);
+    cam_origin_global[0] = wrist_pos[0] + (R_arm[0][2] * 80.0);
+    cam_origin_global[1] = wrist_pos[1] + (R_arm[1][2] * 80.0);
+    cam_origin_global[2] = wrist_pos[2] + (R_arm[2][2] * 80.0);
 
     Serial.println("Cam Global coordinates processed");
 
