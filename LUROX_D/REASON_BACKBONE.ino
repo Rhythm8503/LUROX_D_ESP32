@@ -8,7 +8,7 @@
 
 ***********************************************************************************************/
 
-const double Max_Reach = 1550.0;     /* mm  */
+const double Max_Reach = 750.0;     /* mm  */
 const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
@@ -412,18 +412,19 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       Serial.println("Grabbing Object!");
     #endif
     Grab = true; 
-    Serial.println(" Grab is true ");
+
     double Obj_Pos[3] = {0, 0, 0};
-    Serial.println("Declaring Obj_Pos");
     double Pos_Angles[4] = {ArmRA[1], ArmPA[1], ArmYA[1], ElbowPA[1]}; /* Grab the Values from Variables */
-    Serial.println("Declared variables");
     Get_Current_Angles(Pos_Angles);
-    Serial.println("Get Current Angles Functioned");
     Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
-    Serial.println("Object Position!");
-    Serial.println(Obj_Pos[0]);
-    Serial.println(Obj_Pos[1]);
-    Serial.println(Obj_Pos[2]);
+
+    #if DEBUGSYS
+      Serial.println("Object Position!");
+      Serial.println(Obj_Pos[0]);
+      Serial.println(Obj_Pos[1]);
+      Serial.println(Obj_Pos[2]);
+    #endif
+
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
     WristRA_Lock();
