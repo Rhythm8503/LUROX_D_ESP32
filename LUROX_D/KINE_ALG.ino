@@ -15,6 +15,7 @@
 #define DEBUGSYS true
 const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
 const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
+const uint8_t Hand_Link = 50;
 
 /* Mathmatics Variables */
 const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */
@@ -26,7 +27,7 @@ const uint16_t Joint_limits[4][2] = {
                                    {130, 205}  /* Elbow Pitch */
                                    }; 
 const float W[4] = {0.25, 0.2, 0.1, 0.005}; /* Angle Abuse Weights */
-const double   IK_Filter_Deg = 10.0;     /* kinematic bounding box   */
+const double IK_Filter_Deg = 10.0;     /* kinematic bounding box   */
 
 /* Rotation matrix helpers (inline for speed) */
 static inline void rot_x(double phi, double R[3][3]) {
@@ -219,25 +220,51 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
     return (float)err;
 }
 
-float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, float* outY, float* outZ) {
-    // Convert angles to radians
-    float pitch_rad = DEG_TO_RAD(pitch - 90);
-    float roll_rad = DEG_TO_RAD(roll - 135); 
+float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, double pos_out[3], double R_out[3][3]) {
 
-    // Compute direction vector using spherical coordinates
-    // Pitch (θ) is the angle from the positive z-axis (0° points along +z)
-    // Roll (φ) is the angle in the x-y plane from the positive x-axis
-    float sin_pitch = sin(pitch_rad);
-    float cos_pitch = cos(pitch_rad);
-    float sin_roll = sin(roll_rad);
-    float cos_roll = cos(roll_rad);
+    double R_Sum[3][3];
+    double p[3] = {0, 0, 0};
 
-    // Unit direction vector
-    *outX = sin_pitch * cos_roll; // x = sin(θ) * cos(φ)
-    *outY = sin_pitch * sin_roll; // y = sin(θ) * sin(φ)
-    *outZ = -cos_pitch;            // z = cos(θ)
+        for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            R_Sum[i][j] = (i == j) ? 1.0 : 0.0;
 
-    *magnitude = Obj_Dist; // Retrieve Distance from IR Sensor
+    /* Joint 5 : WristRA - roll about Z (neutral 135) */
+    double phi_roll = DEG_TO_RAD(roll - 135);
+    double Rz[3][3];
+    rot_z(phi_roll, Rz);
+
+    /* Joint 6 : WristPA - pitch about X (neutral 90) */
+    double phi_pitch = DEG_TO_RAD(pitch - 90);
+    double Rx[3][3];
+    rot_x(phi_pitch, Rx);
+
+    /* R_cum = Rz * Rx : roll rotates the pitch assembly */
+    double tmp[3][3];
+    memcpy(tmp, R_Sum, sizeof(tmp));
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c)
+            R_Sum[r][c] = tmp[r][0]*Rz[0][c] + tmp[r][1]*Rz[1][c] + tmp[r][2]*Rz[2][c];
+
+    memcpy(tmp, R_Sum, sizeof(tmp));
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c)
+            R_Sum[r][c] = tmp[r][0]*Rx[0][c] + tmp[r][1]*Rx[1][c] + tmp[r][2]*Rx[2][c];
+
+    /* Link 1: WristRA -> WristPA */
+    double d1[3] = {0.0, 0.0, -(double)Hand_Link};
+    double v[3];
+    mat_vec_mul(R_Sum, d1, v);
+    p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
+
+    /* Link 2: WristPA -> Object, length = IR distance */
+    double d2[3] = {0.0, 0.0, -(double)obj_dist};
+    mat_vec_mul(R_Sum, d2, v);
+    p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
+
+    pos_out[0] = p[0]; pos_out[1] = p[1]; pos_out[2] = p[2];
+    memcpy(R_out, R_Sum, sizeof(R_Sum));
+
     return 1.0f;
 }
 
@@ -319,7 +346,7 @@ uint8_t Hand_Align(double theta_deg[4], uint8_t mode, uint8_t* A5_out, uint8_t* 
     if (mode == MODE_SIDE_SWIPE) alpha += PI / 2.0;     /* 90 deg roll about forearm */
 
     double A5 = 135.0 + RAD_TO_DEG(alpha);
-    double A6 = 110.0 - RAD_TO_DEG(beta);
+    double A6 = 90.0 - RAD_TO_DEG(beta);
 
     *A5_out = (uint8_t)lround(constrain(A5, joint5Limits[0], joint5Limits[1]));
     *A6_out = (uint8_t)lround(constrain(A6, joint6Limits[0], joint6Limits[1]));
@@ -328,41 +355,30 @@ uint8_t Hand_Align(double theta_deg[4], uint8_t mode, uint8_t* A5_out, uint8_t* 
 
 void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {
     Serial.println("Objective Position Active!");
+
     double wrist_pos[3];
     double R_arm[3][3];
-    float hand_local[3];
-    float Magnitude;
 
     // 1. Get Arm's Global Position and Rotation Matrix (Joints 1 to 4)
     Pos_Fwrd_Kin(theta_deg, wrist_pos, R_arm);
 
     // 2. Get Object's Local XYZ Vector (Joints 5 to 6)
-    Hand_Fwrd_Kin(A6, A5, &Magnitude, &hand_local[0], &hand_local[1], &hand_local[2]);
+    double hand_local[3];
+    double R_hand[3][3];
+    Hand_Fwrd_Kin(A6, A5, (float)Obj_Dist, hand_local, R_hand);
 
     Serial.println("Hand Forward Kinematics Ran");
-
-    double cam_origin_global[3];
-    cam_origin_global[0] = wrist_pos[0] + (R_arm[0][2] * 80.0);
-    cam_origin_global[1] = wrist_pos[1] + (R_arm[1][2] * 80.0);
-    cam_origin_global[2] = wrist_pos[2] + (R_arm[2][2] * 80.0);
-
-    Serial.println("Cam Global coordinates processed");
-
-    // 4. Scale Unit Vector by physical Infrared distance
-    double local_target_vec[3] = {hand_local[0] * Magnitude, hand_local[1] * Magnitude, hand_local[2] * Magnitude};
-
-    // 5. Rotate scaled vector into Global Space
-    double global_target_vec[3];
-    global_target_vec[0] = R_arm[0][0]*local_target_vec[0] + R_arm[0][1]*local_target_vec[1] + R_arm[0][2]*local_target_vec[2];
-    global_target_vec[1] = R_arm[1][0]*local_target_vec[0] + R_arm[1][1]*local_target_vec[1] + R_arm[1][2]*local_target_vec[2];
-    global_target_vec[2] = R_arm[2][0]*local_target_vec[0] + R_arm[2][1]*local_target_vec[1] + R_arm[2][2]*local_target_vec[2];
+    
+    /* Rotate hand-local vector into global space: R_arm * p_local */
+    double global_vec[3];
+    mat_vec_mul(R_arm, hand_local, global_vec);
 
     Serial.println("Rotate scaled vector to global space ");
 
     // 6. Translate: Add Global Ray to True Camera Origin
-    global_obj_pos[0] = cam_origin_global[0] + global_target_vec[0];
-    global_obj_pos[1] = cam_origin_global[1] + global_target_vec[1];
-    global_obj_pos[2] = cam_origin_global[2] + global_target_vec[2];
+    global_obj_pos[0] = wrist_pos[0] + global_vec[0];
+    global_obj_pos[1] = wrist_pos[1] + global_vec[1];
+    global_obj_pos[2] = wrist_pos[2] + global_vec[2];
 
     Serial.println("Add global ray to camera origin");
 }

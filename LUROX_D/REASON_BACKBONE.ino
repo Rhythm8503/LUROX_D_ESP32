@@ -462,8 +462,8 @@ void CMD_END() {
 
   CMD_PROC = false;
   CMD_IN = false;
-  ObjFound == false;
-  HandTrack == false;
+  ObjFound = false;
+  HandTrack = false;
   Grab = false;
 
   K210_Write_HALT();

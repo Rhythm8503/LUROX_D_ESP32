@@ -24,7 +24,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
   /* First Position Sweep */
   if (Section == 0) {
     /* Force Move to Position [0, 277, -375.7] */
-    ArmPA[0] = 160;     //Shoulder Pitch
+    ArmPA[0] = 150;     //Shoulder Pitch
     ArmRA[0] = 135;     //Shoulder Roll
     ArmYA[0] = 135;     //Shoulder Yaw
     ElbowPA[0] = 190;   //Elbow Pitch
