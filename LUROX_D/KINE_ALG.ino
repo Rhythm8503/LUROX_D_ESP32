@@ -223,43 +223,28 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
 float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, double pos_out[3], double R_out[3][3]) {
 
     double R_Sum[3][3];
-    double p[3] = {0, 0, 0};
+    double p[3] = {0.0, 0.0, 0.0};
+    double R[3][3];
+    double v[3];
 
-        for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
             R_Sum[i][j] = (i == j) ? 1.0 : 0.0;
 
-    /* Joint 5 : WristRA - roll about Z (neutral 135) */
-    double phi_roll = DEG_TO_RAD(roll - 135);
-    double Rz[3][3];
-    rot_z(phi_roll, Rz);
-
-    /* Joint 6 : WristPA - pitch about X (neutral 90) */
-    double phi_pitch = DEG_TO_RAD(pitch - 90);
-    double Rx[3][3];
-    rot_x(phi_pitch, Rx);
-
-    /* R_cum = Rz * Rx : roll rotates the pitch assembly */
-    double tmp[3][3];
-    memcpy(tmp, R_Sum, sizeof(tmp));
-    for (int r = 0; r < 3; ++r)
-        for (int c = 0; c < 3; ++c)
-            R_Sum[r][c] = tmp[r][0]*Rz[0][c] + tmp[r][1]*Rz[1][c] + tmp[r][2]*Rz[2][c];
-
-    memcpy(tmp, R_Sum, sizeof(tmp));
-    for (int r = 0; r < 3; ++r)
-        for (int c = 0; c < 3; ++c)
-            R_Sum[r][c] = tmp[r][0]*Rx[0][c] + tmp[r][1]*Rx[1][c] + tmp[r][2]*Rx[2][c];
-
-    /* Link 1: WristRA -> WristPA */
+    /* Joint 5 : WristRA — roll about Z, then 50mm link along rolled -Z */
+    rot_z(DEG_TO_RAD((double)roll - 135.0), R);
+    mat_mul(R_Sum, R, R_Sum);
     double d1[3] = {0.0, 0.0, -(double)Hand_Link};
-    double v[3];
     mat_vec_mul(R_Sum, d1, v);
+
     p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
 
-    /* Link 2: WristPA -> Object, length = IR distance */
+    /* Joint 6 : WristPA — pitch about X, then Obj_Dist along pitched -Z */
+    rot_x(DEG_TO_RAD((double)pitch - 90.0), R);
+    mat_mul(R_Sum, R, R_Sum);
     double d2[3] = {0.0, 0.0, -(double)obj_dist};
     mat_vec_mul(R_Sum, d2, v);
+    
     p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
 
     pos_out[0] = p[0]; pos_out[1] = p[1]; pos_out[2] = p[2];
