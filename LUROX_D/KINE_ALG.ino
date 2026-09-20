@@ -290,7 +290,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   float pitchStep = constrain(Kp * pitchError, -MAX_STEP, MAX_STEP);
 
   // Constrain to angles
-  *A5N = (int)round(constrain(A5 - rollStep, joint5Limits[0], joint5Limits[1]));
+  *A5N = (int)round(constrain(A5 + rollStep, joint5Limits[0], joint5Limits[1]));
   *A6N = (int)round(constrain(A6 - pitchStep, joint6Limits[0], joint6Limits[1]));
   objX[1] = CamX; /* Load the Camera values into the Past State */
   objY[1] = CamY;
@@ -321,8 +321,8 @@ uint8_t Hand_Align(double theta_deg[4], uint8_t mode, uint8_t* A5_out, uint8_t* 
     double A5 = 135.0 + RAD_TO_DEG(alpha);
     double A6 = 110.0 - RAD_TO_DEG(beta);
 
-    *A5_out = (uint8_t)lround(constrain(A5, Joint5_Lim[0], Joint5_Lim[1]));
-    *A6_out = (uint8_t)lround(constrain(A6, Joint6_Lim[0], Joint6_Lim[1]));
+    *A5_out = (uint8_t)lround(constrain(A5, joint5Limits[0], joint5Limits[1]));
+    *A6_out = (uint8_t)lround(constrain(A6, joint6Limits[0], joint6Limits[1]));
     return 1;
 }
 
@@ -333,13 +333,8 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     float hand_local[3];
     float Magnitude;
 
-    Serial.println("Variables Declared");
-
     // 1. Get Arm's Global Position and Rotation Matrix (Joints 1 to 4)
-    //Serial.print("HWM: "); Serial.println(uxTaskGetStackHighWaterMark(NULL));
     Pos_Fwrd_Kin(theta_deg, wrist_pos, R_arm);
-    //Serial.print("HWM: "); Serial.println(uxTaskGetStackHighWaterMark(NULL));
-    Serial.println("Forward Kinematics Ran");
 
     // 2. Get Object's Local XYZ Vector (Joints 5 to 6)
     Hand_Fwrd_Kin(A6, A5, &Magnitude, &hand_local[0], &hand_local[1], &hand_local[2]);

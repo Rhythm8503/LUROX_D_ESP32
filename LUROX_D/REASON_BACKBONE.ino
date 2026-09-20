@@ -113,7 +113,7 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50], int 
         ArmYA_Lock();   /* Locking function just in case */
 
         /* Align Hand with XY Plane or 90 Degrees */
-        Hand_Plane_Align(th_out, (uint8_t)traj_mode, &WristRA[0], &WristPA[0]);
+        Hand_Align(th_out, (uint8_t)traj_mode, &WristRA[0], &WristPA[0]);
         WristRA_Lock(); /* Locking function just in case */
 
         /* dwell so the servos reach the pose before the next step */
@@ -429,6 +429,8 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       Serial.println(Obj_Pos[1]);
       Serial.println(Obj_Pos[2]);
     #endif
+
+    Obj_Pos[1] = Obj_Pos[1] - 100;
 
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
