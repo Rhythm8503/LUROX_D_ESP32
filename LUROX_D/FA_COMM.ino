@@ -52,7 +52,7 @@ void K210_Handle() {
           layer1_counter++;
         } else {
           if (b == 0x3) {                  // Layer 1 <CLOSE>
-            CMD_IN = true;                 // Set the command input flag
+            //CMD_IN = true;                 // Set the command input flag
           } else {
             state = STATE_WAITING_LAYER;  // Invalid sequence, reset
           }

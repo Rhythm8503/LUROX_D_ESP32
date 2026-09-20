@@ -492,7 +492,7 @@ def control_loop(state):
             Request, Intent, Objective, Specification = comm.layer1_data
             if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
                 SpeechLayer = 0
-                Layer0_Load() # Loading the HOME Layer!
+                #Layer0_Load() # Loading the HOME Layer!
                 SpeechActive = True
                 Request = Intent = Specification = Objective = 0
 

@@ -8,7 +8,7 @@
 
 ***********************************************************************************************/
 
-const double Max_Reach = 550.0;     /* mm  */
+const double Max_Reach = 1550.0;     /* mm  */
 const int Traj_Points = 50;
 /* Trajectory modes */
 #define MODE_TOP_DOWN   1
@@ -73,6 +73,9 @@ void Gen_Trajectory(const double p_start[3], const double p_target[3], int mode,
 }
 
 void Solve_Trajectory(const double theta_init[4], const double path[3][50], double theta_traj[4][50], double *avg_iters) { //Solves the Parametric Curve Points, so Point to Point Kinematics
+    #if DEBUGSYS
+      Serial.println(" Solving Trajectory!");
+    #endif
     double seed[4];
     memcpy(seed, theta_init, sizeof(seed));
     long total_iters_unused = 0;  /* (iteration count not surfaced here) */
@@ -118,6 +121,9 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50]) { //
 }
 
 float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and Mode and the Arm will move.
+    #if DEBUGSYS
+      Serial.println("Running Trajectory!");
+    #endif
     /* sanity: reject unreachable targets */
     double r = sqrt(p_target[0]*p_target[0] +
                     p_target[1]*p_target[1] +
@@ -218,7 +224,7 @@ void Halt_Function() {
 
 void Gesture_Function(int req_ges, int int_ges) {
   #if DEBUGSYS
-  Serial.println("Displaying Gesture on Hand!");
+    Serial.println("Displaying Gesture on Hand!");
   #endif
 
   /* Move to Pose Position */
@@ -384,7 +390,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
         CMD_END();
 
         #if DEBUGSYS
-          Serial.println("Timeout Alignment, gave up!");
+          //Serial.println("Timeout Alignment, gave up!");
         #endif
         break;
       }
@@ -406,11 +412,18 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       Serial.println("Grabbing Object!");
     #endif
     Grab = true; 
-
+    Serial.println(" Grab is true ");
     double Obj_Pos[3] = {0, 0, 0};
+    Serial.println("Declaring Obj_Pos");
     double Pos_Angles[4] = {ArmRA[1], ArmPA[1], ArmYA[1], ElbowPA[1]}; /* Grab the Values from Variables */
-
+    Serial.println("Declared variables");
+    Get_Current_Angles(Pos_Angles);
+    Serial.println("Get Current Angles Functioned");
     Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
+    Serial.println("Object Position!");
+    Serial.println(Obj_Pos[0]);
+    Serial.println(Obj_Pos[1]);
+    Serial.println(Obj_Pos[2]);
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
     WristRA_Lock();
@@ -445,6 +458,7 @@ void CMD_END() {
   CMD_IN = false;
   ObjFound == false;
   HandTrack == false;
+  Grab = false;
 
   K210_Write_HALT();
 }

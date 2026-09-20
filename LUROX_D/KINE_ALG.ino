@@ -219,8 +219,8 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
 
 float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, float* outY, float* outZ) {
     // Convert angles to radians
-    float pitch_rad = DEG_TO_RAD(pitch);
-    float roll_rad = DEG_TO_RAD(roll - 225); /* Shifting the roll by 225 degrees to ensure 135 is neutral */
+    float pitch_rad = DEG_TO_RAD(pitch - 90);
+    float roll_rad = DEG_TO_RAD(roll - 135); 
 
     // Compute direction vector using spherical coordinates
     // Pitch (θ) is the angle from the positive z-axis (0° points along +z)
@@ -236,6 +236,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, float* outX, floa
     *outZ = -cos_pitch;            // z = cos(θ)
 
     *magnitude = Obj_Dist; // Retrieve Distance from IR Sensor
+    return 1.0f;
 }
 
 int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* A5N, uint8_t* A6N) {
@@ -253,7 +254,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
 
   const uint8_t CenterX = 112;
   const uint8_t CenterY = 112;
-  const uint8_t DEADZONE = 16;
+  const uint8_t DEADZONE = 36; /* Heavy Deadzone especially if close to camera */
 
   if ((CamX <= 1 && CamY <= 1) || (CamX >= 254 && CamY >= 254)) {
     *A5N = round(A5);
@@ -290,8 +291,8 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   float pitchStep = constrain(Kp * pitchError, -MAX_STEP, MAX_STEP);
 
   // Constrain to angles
-  *A5N = (int)round(constrain(A5 + rollStep, joint5Limits[0], joint5Limits[1]));
-  *A6N = (int)round(constrain(A6 + pitchStep, joint6Limits[0], joint6Limits[1]));
+  *A5N = (int)round(constrain(A5 - rollStep, joint5Limits[0], joint5Limits[1]));
+  *A6N = (int)round(constrain(A6 - pitchStep, joint6Limits[0], joint6Limits[1]));
   objX[1] = CamX; /* Load the Camera values into the Past State */
   objY[1] = CamY;
 
@@ -304,21 +305,31 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
 }
 
 void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {
+    Serial.println("Objective Position Active!");
     double wrist_pos[3];
     double R_arm[3][3];
     float hand_local[3];
     float Magnitude;
 
+    Serial.println("Variables Declared");
+
     // 1. Get Arm's Global Position and Rotation Matrix (Joints 1 to 4)
+    //Serial.print("HWM: "); Serial.println(uxTaskGetStackHighWaterMark(NULL));
     Pos_Fwrd_Kin(theta_deg, wrist_pos, R_arm);
+    //Serial.print("HWM: "); Serial.println(uxTaskGetStackHighWaterMark(NULL));
+    Serial.println("Forward Kinematics Ran");
 
     // 2. Get Object's Local XYZ Vector (Joints 5 to 6)
     Hand_Fwrd_Kin(A6, A5, &Magnitude, &hand_local[0], &hand_local[1], &hand_local[2]);
+
+    Serial.println("Hand Forward Kinematics Ran");
 
     double cam_origin_global[3];
     cam_origin_global[0] = wrist_pos[0] + (R_arm[0][2] * -80.0);
     cam_origin_global[1] = wrist_pos[1] + (R_arm[1][2] * -80.0);
     cam_origin_global[2] = wrist_pos[2] + (R_arm[2][2] * -80.0);
+
+    Serial.println("Cam Global coordinates processed");
 
     // 4. Scale Unit Vector by physical Infrared distance
     double local_target_vec[3] = {hand_local[0] * Magnitude, hand_local[1] * Magnitude, hand_local[2] * Magnitude};
@@ -329,9 +340,13 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     global_target_vec[1] = R_arm[1][0]*local_target_vec[0] + R_arm[1][1]*local_target_vec[1] + R_arm[1][2]*local_target_vec[2];
     global_target_vec[2] = R_arm[2][0]*local_target_vec[0] + R_arm[2][1]*local_target_vec[1] + R_arm[2][2]*local_target_vec[2];
 
+    Serial.println("Rotate scaled vector to global space ");
+
     // 6. Translate: Add Global Ray to True Camera Origin
     global_obj_pos[0] = cam_origin_global[0] + global_target_vec[0];
     global_obj_pos[1] = cam_origin_global[1] + global_target_vec[1];
     global_obj_pos[2] = cam_origin_global[2] + global_target_vec[2];
+
+    Serial.println("Add global ray to camera origin");
 }
 

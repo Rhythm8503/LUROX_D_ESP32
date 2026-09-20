@@ -7,6 +7,7 @@
     LUROX D: Mark II Software
 ***********************************************************************************************/
 
+SET_LOOP_TASK_STACK_SIZE(16384); 
 
 /***************************************************************************************** 
                                 LUROX D Global Definitions
@@ -54,6 +55,8 @@ void setup() {
     Bluetooth_Initialization(); /* Initalize Bluetooth for Remote Control */
     FreeRTOS_Initalization();   /* FreeRTOS Task Functions Initalize */
 
+    Serial.print("loopTask stack: ");
+    Serial.println(getArduinoLoopTaskStackSize());               /* should print 16384 */
     vTaskDelay(pdMS_TO_TICKS(100));
 }
 
@@ -68,14 +71,14 @@ void loop() {
   Serial_Terminal();                /* Direct Connection from the Computer */
 
   /* Standy By Function */
-  if (((millis() - ResetTimer) > 15000) && Wander == true && SleepState == false) {
-    ResetTimer = millis();
+  // if (((millis() - ResetTimer) > 15000) && Wander == true && SleepState == false) {
+  //   ResetTimer = millis();
 
-    #if DEBUGSYS
-      Serial.println("===========================");
-    #endif
-    Standby();
-  }
+  //   #if DEBUGSYS
+  //     Serial.println("===========================");
+  //   #endif
+  //   Standby();
+  // }
 
   /* This loop wil primarily focus on the control loop reading information and kinematics instruction to grab objects */
   if (CMD_IN == true && CMD_PROC == false) {
