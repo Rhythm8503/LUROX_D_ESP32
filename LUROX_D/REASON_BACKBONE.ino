@@ -96,7 +96,7 @@ void Solve_Trajectory(const double theta_init[4], const double path[3][50], doub
     if (avg_iters) *avg_iters = sum_iters / (double)Traj_Points;
 }
 
-float Move_Trajectory(const double theta_init[4], const double path[3][50]) { // Updates the Motor Angles from Point to Point
+float Move_Trajectory(const double theta_init[4], const double path[3][50], int traj_mode) { // Updates the Motor Angles from Point to Point
     double seed[4];
     memcpy(seed, theta_init, sizeof(seed));
 
@@ -110,6 +110,11 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50]) { //
 
         /* command the arm to the solved pose — point to point */
         Move_Arm_Pose(th_out);
+        ArmYA_Lock();   /* Locking function just in case */
+
+        /* Align Hand with XY Plane or 90 Degrees */
+        Hand_Plane_Align(th_out, (uint8_t)traj_mode, &WristRA[0], &WristPA[0]);
+        WristRA_Lock(); /* Locking function just in case */
 
         /* dwell so the servos reach the pose before the next step */
         vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
@@ -143,7 +148,7 @@ float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and
     Gen_Trajectory(p_start, p_target, mode, path);
 
     /* drive the arm through the path, point to point */
-    Move_Trajectory(theta_now, path);
+    Move_Trajectory(theta_now, path, mode);
     return 1.0f;
 }
 

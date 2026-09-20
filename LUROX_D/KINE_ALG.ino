@@ -13,6 +13,8 @@
 ******************************************************************************************/
 
 #define DEBUGSYS true
+const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
+const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
 
 /* Mathmatics Variables */
 const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */
@@ -249,9 +251,6 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   const float DEG_PER_PX = 0.2; 
   const float MAX_STEP = 20;
 
-  const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
-  const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
-
   const uint8_t CenterX = 112;
   const uint8_t CenterY = 112;
   const uint8_t DEADZONE = 36; /* Heavy Deadzone especially if close to camera */
@@ -302,6 +301,29 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   else {
     return 0; /* Not detected likely! */
   }
+}
+
+uint8_t Hand_Align(double theta_deg[4], uint8_t mode, uint8_t* A5_out, uint8_t* A6_out) {
+    if (!A5_out || !A6_out) return 0;
+
+    double pos[3];
+    double R_arm[3][3];
+    Pos_Fwrd_Kin(theta_deg, pos, R_arm);                /* Current arm X,Y,Z position */
+    const double dx = R_arm[2][0];
+    const double dy = R_arm[2][1];
+    const double dz = R_arm[2][2];
+
+    double alpha = atan2(dx, dy);                       /* azimuth of the dial (rad) */
+    double beta  = asin(constrain(dz, -1.0, 1.0));      /* elevation split   (rad) */
+
+    if (mode == MODE_SIDE_SWIPE) alpha += PI / 2.0;     /* 90 deg roll about forearm */
+
+    double A5 = 135.0 + RAD_TO_DEG(alpha);
+    double A6 = 110.0 - RAD_TO_DEG(beta);
+
+    *A5_out = (uint8_t)lround(constrain(A5, Joint5_Lim[0], Joint5_Lim[1]));
+    *A6_out = (uint8_t)lround(constrain(A6, Joint6_Lim[0], Joint6_Lim[1]));
+    return 1;
 }
 
 void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_pos[3]) {

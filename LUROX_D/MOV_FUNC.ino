@@ -24,7 +24,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
   /* First Position Sweep */
   if (Section == 0) {
     /* Force Move to Position [0, 277, -375.7] */
-    ArmPA[0] = 150;     //Shoulder Pitch
+    ArmPA[0] = 160;     //Shoulder Pitch
     ArmRA[0] = 135;     //Shoulder Roll
     ArmYA[0] = 135;     //Shoulder Yaw
     ElbowPA[0] = 190;   //Elbow Pitch
@@ -48,9 +48,9 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     }
   }
 
-  /* Pushing Trajectory Sweep 1 - 3 */
-  else if (Section >= 1 && Section <= 3) {
-    double Traj[3] = {0, (277 + (Section * 25)), -375};
+  /* Pushing Trajectory Sweep 1 - 2 */
+  else if (Section == 1 || Section == 2) {
+    double Traj[3] = {0, (277 + (Section * 50)), -375};
     Run_Trajectory(Traj, 1);
 
     for (int Sw = 0; Sw <= 5; Sw++) {
@@ -65,6 +65,30 @@ void Search_Position(uint8_t Section) { // Hunting for Object
           vTaskDelay(pdMS_TO_TICKS(2500)); /* Pause for OV5640 Lock On*/
         }
       }
+  }
+
+  else if (Section == 3) { /* Tilted up and looking for stuff at a different perspective*/
+    ArmPA[0] = 160;     //Shoulder Pitch
+    ArmRA[0] = 135;     //Shoulder Roll
+    ArmYA[0] = 135;     //Shoulder Yaw
+    ElbowPA[0] = 190;   //Elbow Pitch
+    WristPA[0] = 100;    //Wrist Pitch
+    WristRA[0] = 135;   //Wrist Roll
+    ArmYA_Lock();
+    WristRA_Lock();
+
+    for (int Sw = 0; Sw <= 4; Sw++) {
+        if (ACT_Break == true) break;       /* Break before movement */
+        if (ObjFound) break;
+        WristPA[0] = 80 - (Sw * 10);        /* Wrist Pitch Slowly 80 -> 40 */
+        for (int Sr = 0; Sr <= 4; Sr++) {
+          if (ObjFound) break;              /* Break before movement */
+          if (ACT_Break == true) break;
+          ArmYA[0] = 100 + (Sr * 20);       /* Arm Yaw Sweep 100 -> 180 */
+          ArmYA_Lock(); 
+          vTaskDelay(pdMS_TO_TICKS(2500)); /* Pause for OV5640 Lock On*/
+      }
+    }
   }
 
   /* Random Point Search*/
