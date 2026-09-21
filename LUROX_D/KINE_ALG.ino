@@ -232,7 +232,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, int16_t magnitude, double pos_out[3
     double p[3] = {0.0, 0.0, 0.0};
 
     /* Sensor Calibration */
-    magnitude = magnitude * 0.8; /* Slight dampening */
+    magnitude = magnitude * 0.75; /* Slight dampening */
 
     /* Identity matrix as initial cumulative rotation */
     for (int i = 0; i < 3; i++) {
@@ -273,7 +273,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, int16_t magnitude, double pos_out[3
                           tmp[r][2]*R[2][c];
         }
 
-    double d2[3] = {0.0, 0.0, -magnitude};   /* IR distance to object */
+    double d2[3] = {0.0, -magnitude, 0.0};   /* IR distance to object */
     mat_vec_mul(R_Sum, d2, v);
     p[0] += v[0];
     p[1] += v[1];
