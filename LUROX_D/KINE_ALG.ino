@@ -15,7 +15,7 @@
 #define DEBUGSYS true
 const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
 const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
-const uint8_t Hand_Link = 50;
+const uint8_t Hand_Link = 25; /* Actual rotation distance is 25mm */
 
 /* Mathmatics Variables */
 const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */
@@ -49,6 +49,13 @@ static inline void rot_z(double phi, double R[3][3]) {
     R[0][0] =    c;  R[0][1] =    s;  R[0][2] = 0.0;
     R[1][0] =   -s;  R[1][1] =    c;  R[1][2] = 0.0;
     R[2][0] = 0.0;  R[2][1] = 0.0;  R[2][2] = 1.0;
+}
+
+static inline void rot_z_reg(double phi, double R[3][3]) {
+    double c = cos(phi), s = sin(phi);
+    R[0][0] =    c;  R[0][1] =   -s;  R[0][2] = 0.0; // Negative sine here
+    R[1][0] =    s;  R[1][1] =    c;  R[1][2] = 0.0; // Positive sine here
+    R[2][0] = 0.0;   R[2][1] = 0.0;   R[2][2] = 1.0;
 }
 
 /* Matrix-vector multiply (3x3 * 3x1) */
@@ -220,34 +227,62 @@ float Invrs_Kin(const double p_d[3], const double theta_init[4], double theta_ou
     return (float)err;
 }
 
-float Hand_Fwrd_Kin(float pitch, float roll, float* magnitude, double pos_out[3], double R_out[3][3]) {
-
+float Hand_Fwrd_Kin(float pitch, float roll, int16_t magnitude, double pos_out[3], double R_out[3][3]) {
     double R_Sum[3][3];
     double p[3] = {0.0, 0.0, 0.0};
-    double R[3][3];
-    double v[3];
 
-    for (int i = 0; i < 3; ++i)
-        for (int j = 0; j < 3; ++j)
+    /* Sensor Calibration */
+    magnitude = magnitude * 0.8; /* Slight dampening */
+
+    /* Identity matrix as initial cumulative rotation */
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
             R_Sum[i][j] = (i == j) ? 1.0 : 0.0;
+        }
+    }
 
-    /* Joint 5 : WristRA — roll about Z, then 50mm link along rolled -Z */
+    /* Joint 5 : WristRA - roll about Z (neutral 135) */
+    double R[3][3];
     rot_z(DEG_TO_RAD((double)roll - 135.0), R);
-    mat_mul(R_Sum, R, R_Sum);
-    double d1[3] = {0.0, 0.0, -(double)Hand_Link};
-    mat_vec_mul(R_Sum, d1, v);
 
-    p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
+    /* Update cumulative rotation: R_cum = R_cum * R */
+    double tmp[3][3];
+    memcpy(tmp, R_Sum, sizeof(tmp));
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) {
+            R_Sum[r][c] = tmp[r][0]*R[0][c] +
+                          tmp[r][1]*R[1][c] +
+                          tmp[r][2]*R[2][c];
+        }
 
-    /* Joint 6 : WristPA — pitch about X, then Obj_Dist along pitched -Z */
+    double d[3] = {0.0, 0.0, -Hand_Link};   /* 25mm link to WristPA */
+    double v[3];
+    mat_vec_mul(R_Sum, d, v);
+    p[0] += v[0];
+    p[1] += v[1];
+    p[2] += v[2];
+
+    /* Joint 6 : WristPA - pitch about X (neutral 90) */
     rot_x(DEG_TO_RAD((double)pitch - 90.0), R);
-    mat_mul(R_Sum, R, R_Sum);
-    double d2[3] = {0.0, 0.0, -(double)obj_dist};
-    mat_vec_mul(R_Sum, d2, v);
-    
-    p[0] += v[0]; p[1] += v[1]; p[2] += v[2];
 
-    pos_out[0] = p[0]; pos_out[1] = p[1]; pos_out[2] = p[2];
+    memcpy(tmp, R_Sum, sizeof(tmp));
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) {
+            R_Sum[r][c] = tmp[r][0]*R[0][c] +
+                          tmp[r][1]*R[1][c] +
+                          tmp[r][2]*R[2][c];
+        }
+
+    double d2[3] = {0.0, 0.0, -magnitude};   /* IR distance to object */
+    mat_vec_mul(R_Sum, d2, v);
+    p[0] += v[0];
+    p[1] += v[1];
+    p[2] += v[2];
+
+    pos_out[0] = p[0];
+    pos_out[1] = p[1];
+    pos_out[2] = p[2];
+
     memcpy(R_out, R_Sum, sizeof(R_Sum));
 
     return 1.0f;
@@ -350,7 +385,7 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     // 2. Get Object's Local XYZ Vector (Joints 5 to 6)
     double hand_local[3];
     double R_hand[3][3];
-    Hand_Fwrd_Kin(A6, A5, (float)Obj_Dist, hand_local, R_hand);
+    Hand_Fwrd_Kin(A6, A5, Obj_Dist, hand_local, R_hand);
 
     Serial.println("Hand Forward Kinematics Ran");
     

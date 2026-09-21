@@ -423,6 +423,9 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     Get_Current_Angles(Pos_Angles);
     Object_Position(Pos_Angles, WristRA[1], WristPA[1], Obj_Pos);
 
+    Obj_Pos[1] = Obj_Pos[1] - 210;
+    Obj_Pos[2] = Obj_Pos[2] - 70;
+
     #if DEBUGSYS
       Serial.println("Object Position!");
       Serial.println(Obj_Pos[0]);
@@ -433,7 +436,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
     WristRA_Lock();
-    vTaskDelay(pdMS_TO_TICKS(5000));                                    /* Hold and Wait */
+    vTaskDelay(pdMS_TO_TICKS(15000));                                    /* Hold and Wait */
 
                                                                         /* Based on Intention with Object */
     if (int_input == 3) Push_Obj(Obj_Pos);
