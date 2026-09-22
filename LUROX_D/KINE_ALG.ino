@@ -232,7 +232,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, int16_t magnitude, double pos_out[3
     double p[3] = {0.0, 0.0, 0.0};
 
     /* Sensor Calibration */
-    magnitude = magnitude * 0.75; /* Slight dampening */
+    magnitude = magnitude * 0.8; /* Slight dampening */
 
     /* Identity matrix as initial cumulative rotation */
     for (int i = 0; i < 3; i++) {
@@ -243,7 +243,7 @@ float Hand_Fwrd_Kin(float pitch, float roll, int16_t magnitude, double pos_out[3
 
     /* Joint 5 : WristRA - roll about Z (neutral 135) */
     double R[3][3];
-    rot_z(DEG_TO_RAD((double)roll - 135.0), R);
+    rot_z_reg(DEG_TO_RAD((double)roll - 135.0), R);
 
     /* Update cumulative rotation: R_cum = R_cum * R */
     double tmp[3][3];
