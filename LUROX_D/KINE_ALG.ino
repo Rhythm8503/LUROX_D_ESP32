@@ -29,6 +29,10 @@ const uint16_t Joint_limits[4][2] = {
 const float W[4] = {0.25, 0.2, 0.1, 0.005}; /* Angle Abuse Weights */
 const double IK_Filter_Deg = 10.0;     /* kinematic bounding box   */
 
+const double Grasp_Y_Budget = 90.0;  /* XY-plane pullback at x=0 */
+const double Grasp_X_Scale  = 200.0; /* |X| where pullback fades to 0 */
+const double Grasp_Z_Offset = 85.0; /* sensor depth offset reduce */
+
 /* Rotation matrix helpers (inline for speed) */
 static inline void rot_x(double phi, double R[3][3]) {
     double c = cos(phi), s = sin(phi);
@@ -399,6 +403,12 @@ void Object_Position(double theta_deg[4], float A5, float A6, double global_obj_
     global_obj_pos[0] = wrist_pos[0] + global_vec[0];
     global_obj_pos[1] = wrist_pos[1] + global_vec[1];
     global_obj_pos[2] = wrist_pos[2] + global_vec[2];
+
+    double xn = global_obj_pos[0] / Grasp_X_Scale;
+    if (xn >  1.0) xn =  1.0;
+    if (xn < -1.0) xn = -1.0;
+    global_obj_pos[1] -= Grasp_Y_Budget * sqrt(1.0 - xn * xn);
+    global_obj_pos[2] += Grasp_Z_Offset;
 
     Serial.println("Add global ray to camera origin");
 }
