@@ -29,9 +29,9 @@ const uint16_t Joint_limits[4][2] = {
 const float W[4] = {0.25, 0.2, 0.1, 0.005}; /* Angle Abuse Weights */
 const double IK_Filter_Deg = 10.0;     /* kinematic bounding box   */
 
-const double Grasp_Y_Budget = 90.0;  /* XY-plane pullback at x=0 */
+const double Grasp_Y_Budget = 100.0;  /* XY-plane pullback at x=0 */
 const double Grasp_X_Scale  = 200.0; /* |X| where pullback fades to 0 */
-const double Grasp_Z_Offset = 85.0; /* sensor depth offset reduce */
+const double Grasp_Z_Offset = 75.0; /* sensor depth offset reduce */
 
 /* Rotation matrix helpers (inline for speed) */
 static inline void rot_x(double phi, double R[3][3]) {

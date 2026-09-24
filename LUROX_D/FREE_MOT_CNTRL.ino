@@ -291,7 +291,7 @@ void Thumb_Mot(void* pvParameters) {
 
       HT.attach(THUMB, 500, 2500);
       HT.write(ThumbRA[0]);
-      vTaskDelay(pdMS_TO_TICKS(20));
+      vTaskDelay(pdMS_TO_TICKS(40));
       HT.detach();
       ThumbRA[1] = ThumbRA[0];
 
@@ -330,12 +330,12 @@ void Index_Mot(void* pvParameters) {
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
       #if DEBUGSYS
-      Serial.println("Index Active");
+        Serial.println("Index Active");
       #endif
 
       HI.attach(INDEX, 500, 2500);
       HI.write(IndexRA[0]);
-      vTaskDelay(pdMS_TO_TICKS(20));
+      vTaskDelay(pdMS_TO_TICKS(40));
       HI.detach();
       IndexRA[1] = IndexRA[0];
 
@@ -346,7 +346,6 @@ void Index_Mot(void* pvParameters) {
       if (Gestures[0] > 0) {
       /* Pulse to ensure power */
       xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
-      //Serial.println("Index Active Pulse");
 
       HI.attach(INDEX, 500, 2500);
       HI.write(IndexRA[1]);
@@ -364,7 +363,7 @@ void Middle_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
   #if DEBUGSYS
-  Serial.println("Middle Task Handle Opened");
+   Serial.println("Middle Task Handle Opened");
   #endif
 
   //HM.attach(MIDDLE, 500, 2500);
@@ -380,7 +379,7 @@ void Middle_Mot(void* pvParameters) {
 
       HM.attach(MIDDLE, 500, 2500);
       HM.write(MiddleRA[0]);
-      vTaskDelay(pdMS_TO_TICKS(20));
+      vTaskDelay(pdMS_TO_TICKS(60));
       HM.detach();
       MiddleRA[1] = MiddleRA[0];
 
@@ -411,7 +410,7 @@ void Ring_Mot(void* pvParameters) {
   #if DEBUGSYS
   Serial.println("Ring Task Handle Opened");
   #endif
-  HR.attach(RING, 500, 2500);
+  //HR.attach(RING, 500, 2500);
 
   while (1) {
   if (RingRA[0] != RingRA[1]) {
@@ -424,7 +423,7 @@ void Ring_Mot(void* pvParameters) {
 
       HR.attach(RING, 500, 2500);
       HR.write(RingRA[0]);
-      vTaskDelay(pdMS_TO_TICKS(20));
+      vTaskDelay(pdMS_TO_TICKS(40));
       HR.detach();
       RingRA[1] = RingRA[0];
 
@@ -456,7 +455,7 @@ void Pinky_Mot(void* pvParameters) {
   Serial.println("Pinky Task Handle Opened");
   #endif
 
-  HP.attach(PINKY, 500, 2500);
+ // HP.attach(PINKY, 500, 2500);
 
   while (1) {
     if (PinkyRA[0] != PinkyRA[1]) {
