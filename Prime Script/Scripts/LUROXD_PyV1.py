@@ -185,8 +185,8 @@ def kpu_session_begin(model_addr):
     if kpu_ready:
         return True          # already loaded — don't re-load
     try:
-        kpu_task = kpu.load(model_addr)          # ← FIX #1
-        kpu.init_yolo2(kpu_task, 0.3, 0.4, 5, anchors)
+        kpu_task = kpu.load(model_addr) # ← FIX #1
+        kpu.init_yolo2(kpu_task, 0.35, 0.4, 5, anchors) # Increased tolerance due to false flags
         kpu_ready = True
         gc.collect()
         return True
@@ -491,9 +491,10 @@ def control_loop(state):
         if comm.UART_read():  # Check for UART Layer 1 Data
             Request, Intent, Objective, Specification = comm.layer1_data
             if (Request == 50 and Intent == 50 and Objective == 50 and Specification == 50):  # Halt and return to default operation
-                SpeechLayer = 0
-                Layer0_Load() # Loading the HOME Layer!
-                SpeechActive = True
+                # Speech has been disabled on this iteration
+                #SpeechLayer = 0
+                #Layer0_Load() # Loading the HOME Layer!
+                #SpeechActive = True
                 Request = Intent = Specification = Objective = 0
 
             else:  # UART Layer 1 Data Received
