@@ -23,7 +23,6 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-//#include "AS5600.h"                 //Stepper motor encoders
 #include <VL53L0X.h>                //VL53L0X Distance Sensor
 #include <ESP32Servo.h>             //ESP32-S3 ISR Servo Manager
 #include <float.h>
@@ -33,8 +32,6 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic;
 
 VL53L0X IRSen;  //Palm sensor
-//AS5600L SHYAS(AS5600L_DEFAULT_ADDRESS, &Wire);  //Encoder Shoulder Yaw
-//AS5600L FRAS(AS5600L_DEFAULT_ADDRESS, &Wire);   //Encoder Forearm Roll
 ESP32PWM pwm;   //PWM Controller on ESP32-S3
 
 Servo HT;       //Thumb

@@ -493,10 +493,10 @@ void Pinky_Mot(void* pvParameters) {
   }
 }
 
-void Sensor_Feedback(void* pvParameters) {
+void Embedded_Comm(void* pvParameters) {
 
   #if DEBUGSYS
-    Serial.println("Sensor Gathering Task Handle Opened");
+    Serial.println("Embedded Comm Task Handle Opened");
   #endif
   uint16_t IR_Counter = 0; /* Temporary tracker to make sure distance sensor is alive. */
 

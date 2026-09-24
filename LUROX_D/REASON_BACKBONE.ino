@@ -8,149 +8,7 @@
 
 ***********************************************************************************************/
 
-const double Max_Reach = 600.0;     /* mm  */
-const int Traj_Points = 50;
-/* Trajectory modes */
-#define MODE_TOP_DOWN   1
-#define MODE_SIDE_SWIPE 2
-#define STEP_DELAY_MS  15   /* dwell per micro-step so servos physically settle */
 #define DEBUGSYS true
-
-/***************************************************************************************** 
-                                Trajectory Functions
-******************************************************************************************/
-
-void Get_Current_Angles(double theta[4]) { // Grab Current Angles from Robotic Arm
-    //theta[0] = (double)ArmRA[1];
-    theta[1] = (double)ArmPA[1];
-    //theta[2] = (double)ArmYA[1];
-    theta[3] = (double)ElbowPA[1];
-
-    theta[0] = 270.0 - (double)ArmRA[1];;   // Flip Arm Roll around 135°
-    theta[2] = 270.0 - (double)ArmYA[1];   // Flip Arm Yaw around 135°
-}
-
-void Move_Arm_Pose(const double theta[4]) { //Update Arm with New Angles
-    int Mod_theta0 = 270.0 - theta[0];   // Flip Arm Roll around 135°
-    int Mod_theta2 = 270.0 - theta[2];   // Flip Arm Yaw around 135°
-
-    ArmRA[0]   = (int)lround(Mod_theta0);
-    ArmPA[0]   = (int)lround(theta[1]);
-    ArmYA[0]   = (int)lround(Mod_theta2);
-    ElbowPA[0] = (int)lround(theta[3]);
-}
-
-void Gen_Trajectory(const double p_start[3], const double p_target[3], int mode, double path[3][50]) { // Generates the Parametric Bezier Curve Points to Object
-    /* --- 1. control point --- */
-    double p_ctrl[3] = {0.0, 0.0, 0.0};
-    p_ctrl[1] = p_start[1];                       /* lock Y axis */
-
-    if (mode == MODE_TOP_DOWN) {
-        p_ctrl[0] = p_target[0];                  /* X = target */
-        p_ctrl[2] = p_start[2];                   /* Z = start  */
-    } else { /* SIDE_SWIPE */
-        p_ctrl[0] = p_start[0];                   /* X = start  */
-        p_ctrl[2] = p_target[2];                  /* Z = target */
-    }
-
-    /* --- 2. 50-point Bezier sweep --- */
-    for (int i = 0; i < 50; ++i) {
-        double t = (double)i / (double)(Traj_Points - 1);
-        double u = 1.0 - t;
-        double pt[3];
-        for (int k = 0; k < 3; ++k)
-            pt[k] = u*u * p_start[k] + 2.0*u*t * p_ctrl[k] + t*t * p_target[k];
-
-        /* origin-aware reach clamp */
-        double r = sqrt(pt[0]*pt[0] + pt[1]*pt[1] + pt[2]*pt[2]);
-        if (r > Max_Reach) {
-            double s = Max_Reach / r;
-            pt[0] *= s; pt[1] *= s; pt[2] *= s;
-        }
-        for (int k = 0; k < 3; ++k)
-            path[k][i] = pt[k];
-    }
-}
-
-void Solve_Trajectory(const double theta_init[4], const double path[3][50], double theta_traj[4][50], double *avg_iters) { //Solves the Parametric Curve Points, so Point to Point Kinematics
-    #if DEBUGSYS
-      Serial.println(" Solving Trajectory!");
-    #endif
-    double seed[4];
-    memcpy(seed, theta_init, sizeof(seed));
-    long total_iters_unused = 0;  /* (iteration count not surfaced here) */
-    (void)total_iters_unused;
-
-    double sum_iters = 0.0;
-
-    for (int i = 0; i < Traj_Points; ++i) {
-        double p_des[3] = { path[0][i], path[1][i], path[2][i] };
-        double th_out[4];
-        Invrs_Kin(p_des, seed, th_out);     /* 10° filter inside */
-        for (int k = 0; k < 4; ++k) {
-            theta_traj[k][i] = th_out[k];
-            seed[k] = th_out[k];                   /* chain seed forward */
-        }
-        sum_iters += 1.0;                         /* per-point counter */
-    }
-    if (avg_iters) *avg_iters = sum_iters / (double)Traj_Points;
-}
-
-float Move_Trajectory(const double theta_init[4], const double path[3][50], int traj_mode) { // Updates the Motor Angles from Point to Point
-    double seed[4];
-    memcpy(seed, theta_init, sizeof(seed));
-
-    for (int i = 0; i < Traj_Points; ++i) {
-        double p_des[3] = { path[0][i], path[1][i], path[2][i] };
-
-        /* solve this micro-step within ±10° of the current pose */
-        double th_out[4];
-        float err = Invrs_Kin(p_des, seed, th_out);
-        (void)err;
-
-        /* command the arm to the solved pose — point to point */
-        Move_Arm_Pose(th_out);
-        ArmYA_Lock();   /* Locking function just in case */
-
-        /* Align Hand with XY Plane or 90 Degrees */
-        Hand_Align(th_out, (uint8_t)traj_mode, &WristRA[0], &WristPA[0]);
-        WristRA_Lock(); /* Locking function just in case */
-
-        /* dwell so the servos reach the pose before the next step */
-        vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
-
-        /* chain the solved pose forward as the next seed */
-        memcpy(seed, th_out, sizeof(seed));
-    }
-    return 1.0f;
-}
-
-float Run_Trajectory(const double p_target[3], int mode) { //Plug in the XYZ and Mode and the Arm will move.
-    #if DEBUGSYS
-      Serial.println("Running Trajectory!");
-    #endif
-    /* sanity: reject unreachable targets */
-    double r = sqrt(p_target[0]*p_target[0] +
-                    p_target[1]*p_target[1] +
-                    p_target[2]*p_target[2]);
-    if (r > Max_Reach) return -1.0f;     /* caller should re-prompt */
-
-    /* seed from the arm's real current pose */
-    double theta_now[4];
-    Get_Current_Angles(theta_now);
-
-    double p_start[3];
-    double R_dummy[3][3];
-    Pos_Fwrd_Kin(theta_now, p_start, R_dummy);
-
-    /* generate the Bezier path */
-    static double path[3][Traj_Points];
-    Gen_Trajectory(p_start, p_target, mode, path);
-
-    /* drive the arm through the path, point to point */
-    Move_Trajectory(theta_now, path, mode);
-    return 1.0f;
-}
 
 /***************************************************************************************** 
                                       Decision Mapping
@@ -433,7 +291,7 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
     ArmYA_Lock();
     WristRA_Lock();
-    vTaskDelay(pdMS_TO_TICKS(30000));                                    /* Hold and Wait */
+    vTaskDelay(pdMS_TO_TICKS(10000));                                   /* Hold and Wait */
 
                                                                         /* Based on Intention with Object */
     if (int_input == 3) Push_Obj(Obj_Pos);

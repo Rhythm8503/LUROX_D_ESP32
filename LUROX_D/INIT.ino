@@ -41,7 +41,7 @@ void FreeRTOS_Initalization() {
   xTaskCreatePinnedToCore(Ring_Mot, "Ring Motor", 4096, NULL, 0, &ArmPAMot, 1);
   xTaskCreatePinnedToCore(Pinky_Mot, "Pinky Motor", 4096, NULL, 0, &ArmPAMot, 1);
   
-  xTaskCreatePinnedToCore(Sensor_Feedback, "Sensor Feedback", 16384, NULL, 1, &Feedback, 0);
+  xTaskCreatePinnedToCore(Embedded_Comm, "Comms & Sensor Collection", 16384, NULL, 1, &Feedback, 0);
   
   #if DEBUGSYS
   Serial.println("FreeRTOS Tasks have been Handled");
@@ -63,40 +63,25 @@ void Library_Initalization() {
   K210Serial.begin(115200, SERIAL_8N1, 17, 18);  //Open K210 Port
   randomSeed(analogRead(1));                     //Activate randomness
 
-  //#if i2c_EN
+  #if DEBUGSYS
+    Serial.println("K210 UART Initialized!");
+  #endif
+
   Wire.begin();                   //i2C at 100KHz
-  //#endif
 
   #if DEBUGSYS
-  Serial.println("Embedded Communication Settled");
+    Serial.println("Embedded Communication Settled");
   #endif
 
   /* Palm sensor initalization */
-  //#if i2c_EN
+
   IRSen.setTimeout(500); //500ms Read Periods
   IRSen.init();
   IRSen.startContinuous(1);
 
   #if DEBUGSYS
-  Serial.println("VL53L0X Sensor Initalized");
+    Serial.println("VL53L0X Sensor Initalized");
   #endif
-
-  /* Stepper Motor Encoder */
-  //SHYAS.begin(); 
-  //SHYAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
-
-  #if DEBUGSYS
-  Serial.println("Shoulder AS5600 Initalized");
-  #endif
-
-  //FRAS.begin();  
-  //FRAS.setDirection(AS5600_CLOCK_WISE);  //  default, just be explicit.
-
-  #if DEBUGSYS
-  Serial.println("Forearm AS5600 Initalized");
-  #endif
-
-  //#endif
 }
 
 void Motor_Initalization() {
