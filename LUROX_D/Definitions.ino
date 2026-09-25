@@ -91,12 +91,12 @@ TaskHandle_t Feedback;           //i2C Sensor Feedback & Management
 #define SHY_DIR 15     //Shoulder Yaw Direction Pin
 #define SHY_STEP 16    //Shoulder Yaw Step Pin
 #define SHY_EN 14      //Shoulder Yaw Enable Pin
-uint16_t SYSP = 450;   //Microsecond Pulse Width for Shoulder Yaw Steps
+const uint16_t SYSP = 475;   //Microsecond Pulse Width for Shoulder Yaw Steps
 
 #define FR_DIR 1      //Forearm Roll Direction Pin
 #define FR_STEP 2     //Forearm Roll Step Pin
 #define FR_EN 42      //Forearm Roll Enable Pin
-uint16_t FRSP = 500;  //Microsecond Pulse Width for Forearm Roll Steps
+const uint16_t FRSP = 475;  //Microsecond Pulse Width for Forearm Roll Steps
 
 /* Communication Sepecifications */
 #define RX_PIN 10

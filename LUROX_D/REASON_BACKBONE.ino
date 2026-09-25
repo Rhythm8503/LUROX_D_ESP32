@@ -288,9 +288,22 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
       Serial.println(Obj_Pos[2]);
     #endif
 
+    Serial.println("==========================");
+    Serial.print("ArmRA = ");
+    Serial.println(ArmRA[1]);
+    Serial.print("ArmYA = ");
+    Serial.println(ArmYA[1]);
+    Serial.print("ArmPA = ");
+    Serial.println(ArmPA[1]);
+    Serial.print("ElbowPA = ");
+    Serial.println(ElbowPA[1]);
+    Serial.print("WristRA = ");
+    Serial.println(WristRA[1]);
+    Serial.print("WristPA = ");
+    Serial.println(WristPA[1]);
+    Serial.println("==========================");
+    
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
-    ArmYA_Lock();
-    WristRA_Lock();
     vTaskDelay(pdMS_TO_TICKS(10000));                                   /* Hold and Wait */
 
                                                                         /* Based on Intention with Object */

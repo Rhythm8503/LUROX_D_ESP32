@@ -15,7 +15,7 @@
 #define DEBUGSYS true
 const uint8_t joint5Limits[2] = { 30, 225 }; /* 135 is Nominal, range from 30 to 225 */
 const uint8_t joint6Limits[2] = { 40, 110 }; /* 90 is Nominal, range from 40 to 110 */
-const uint8_t Hand_Link = 25; /* Actual rotation distance is 25mm */
+const uint8_t Hand_Link = 25;                /* Actual rotation distance is 25mm */
 
 /* Mathmatics Variables */
 const uint8_t Vector_Length[4] = {70, 25, 210, 230}; /* MM */
@@ -300,7 +300,7 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
 
   const float Kp = 0.5;  // Proportional Gain
   const float DEG_PER_PX = 0.2; 
-  const float MAX_STEP = 20;
+  const float MAX_STEP = 10;
 
   const uint8_t CenterX = 112;
   const uint8_t CenterY = 112;
@@ -316,33 +316,72 @@ int32_t Hand_CenterCam(float CamX, float CamY, uint8_t A5, uint8_t A6, uint8_t* 
   float ErrorX = CamX - CenterX;
   float ErrorY = CenterY - CamY;
 
-  /* Error Distance from X and Y */
-  float Cam_DistR = sqrt((ErrorX * ErrorX) + (ErrorY * ErrorY));
+  // /* Error Distance from X and Y */
+  // float Cam_DistR = sqrt((ErrorX * ErrorX) + (ErrorY * ErrorY));
 
-  /* Camera generally centered = Stop moving and hold */
-  if (Cam_DistR < DEADZONE) {
-    *A5N = round(A5);
-    *A6N = round(A6);
-    objX[1] = CamX;
-    objY[1] = CamY;
-    return 1; /* Locked onto Target */
-  }
+  // /* Camera generally centered = Stop moving and hold */
+  // if (Cam_DistR < DEADZONE) {
+  //   *A5N = round(A5);
+  //   *A6N = round(A6);
+  //   objX[1] = CamX;
+  //   objY[1] = CamY;
+  //   return 1; /* Locked onto Target */
+  // }
   
-  // Roll Alignment
-  float targetRollDeg = RAD_TO_DEG(atan2(ErrorY, ErrorX));
-  float rollError = 90.0 - targetRollDeg;
-  rollError = fmodf((rollError + 180.0), 360.0);
-  rollError -= 180.0;
+  // // Roll Alignment
+  // float targetRollDeg = RAD_TO_DEG(atan2(ErrorY, ErrorX));
+  // float rollError = 90.0 - targetRollDeg;
+  // rollError = fmodf((rollError + 180.0), 360.0);
+  // rollError -= 180.0;
 
-  float pitchError = Cam_DistR * cos(DEG_TO_RAD(rollError)) * DEG_PER_PX;
+  // //float pitchError = Cam_DistR * cos(DEG_TO_RAD(rollError)) * DEG_PER_PX;
 
-  // 4. Update Kinematics proportionally
-  float rollStep  = constrain(Kp * rollError, -MAX_STEP, MAX_STEP);
-  float pitchStep = constrain(Kp * pitchError, -MAX_STEP, MAX_STEP);
+  // // 4. Update Kinematics proportionally
+  // float rollStep  = constrain(Kp * rollError, -MAX_STEP, MAX_STEP);
+  // float pitchStep = constrain(Kp * pitchError, -MAX_STEP, MAX_STEP);
 
-  // Constrain to angles
-  *A5N = (int)round(constrain(A5 + rollStep, joint5Limits[0], joint5Limits[1]));
-  *A6N = (int)round(constrain(A6 - pitchStep, joint6Limits[0], joint6Limits[1]));
+  // // Constrain to angles
+  // *A5N = (int)round(constrain(A5 + rollStep, joint5Limits[0], joint5Limits[1]));
+  // *A6N = (int)round(constrain(A6 - pitchStep, joint6Limits[0], joint6Limits[1]));
+
+    /* Camera generally centered = Stop moving and hold */
+    if (sqrtf(ErrorX * ErrorX + ErrorY * ErrorY) < DEADZONE) {
+      *A5N = round(A5);
+      *A6N = round(A6);
+      objX[1] = CamX;
+      objY[1] = CamY;
+      return 1;                    /* Locked onto Target */
+    }
+
+    /* ---- 1. Target ray in HAND frame (pinhole: u = x/-y, v = z/-y) ---- */
+    float u = tanf(DEG_TO_RAD(ErrorX * DEG_PER_PX));
+    float v = tanf(DEG_TO_RAD(ErrorY * DEG_PER_PX));
+    float inv_norm = 1.0f / sqrtf(u * u + 1.0f + v * v);
+    float Dh[3] = { u * inv_norm, -inv_norm, v * inv_norm };
+
+    /* ---- 2. Rotate ray into WRIST frame with CURRENT angles ----
+       D_wrist = Rz(r) * Rx(p) * Dh,  expanded in place to avoid matrix code */
+    float r = DEG_TO_RAD((float)A5 - 135.0f);
+    float p = DEG_TO_RAD((float)A6 - 90.0f);
+    float cr = cosf(r), sr = sinf(r);
+    float cp = cosf(p), sp = sinf(p);
+
+    float Dw_x =  cr * Dh[0] + sr * (sp * Dh[1] + cp * Dh[2]);
+    float Dw_y = -sr * Dh[0] + cr * (sp * Dh[1] + cp * Dh[2]);
+    float Dw_z =           -     (cp * Dh[1] - sp * Dh[2]);
+
+    /* ---- 3. Exact extraction: angles that put boresight on the ray ---- */
+    float A5_target = 135.0f + RAD_TO_DEG(atan2f(Dw_x, -Dw_y));
+    float A6_target =  90.0f + RAD_TO_DEG(asinf(constrain(-Dw_z, -1.0f, 1.0f)));
+
+    /* ---- 4. Damped step toward exact solution (iterative closure) ---- */
+    float rollStep  = constrain(Kp * (A5_target - (float)A5), -MAX_STEP, MAX_STEP);
+    float pitchStep = constrain(Kp * (A6_target - (float)A6), -MAX_STEP, MAX_STEP);
+
+    /* Constrain to angles */
+    *A5N = (int)round(constrain((float)A5 + rollStep,  joint5Limits[0], joint5Limits[1]));
+    *A6N = (int)round(constrain((float)A6 + pitchStep, joint6Limits[0], joint6Limits[1]));
+
   objX[1] = CamX; /* Load the Camera values into the Past State */
   objY[1] = CamY;
 

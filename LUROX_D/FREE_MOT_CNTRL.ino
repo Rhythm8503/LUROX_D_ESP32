@@ -38,9 +38,9 @@ void ARMYA_Mot(void* pvParameters) {
 
       for (int St = 0; St < SHY_steps; St++) {
         digitalWrite(SHY_STEP, HIGH);  // Assumes Sstep2pin is defined
-        delayMicroseconds(500);        // Adjust for motor speed
+        delayMicroseconds(SYSP);        // Adjust for motor speed
         digitalWrite(SHY_STEP, LOW);
-        delayMicroseconds(500);
+        delayMicroseconds(SYSP);
       }
 
       // Update Position history
@@ -253,9 +253,9 @@ void WRRA_Mot(void* pvParameters) {
 
       for (int St = 0; St < FR_Steps; St++) {
         digitalWrite(FR_STEP, HIGH);  // Assumes Sstep2pin is defined
-        delayMicroseconds(500);       // Adjust for motor speed
+        delayMicroseconds(FRSP);       // Adjust for motor speed
         digitalWrite(FR_STEP, LOW);
-        delayMicroseconds(500);
+        delayMicroseconds(FRSP);
       }
 
       if (Grab == false) digitalWrite(FR_EN, HIGH);  /* Disable Motor after movement */

@@ -32,6 +32,8 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     WristRA[0] = 135;   //Wrist Roll
     ArmYA_Lock();
     WristRA_Lock();
+    WristRA[0] = 100;
+    WristRA_Lock();
 
     /* Wrist Sweep */
     for (int Sw = 0; Sw <= 5; Sw++) {

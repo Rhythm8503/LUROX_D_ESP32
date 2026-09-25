@@ -12,9 +12,9 @@ const double Max_Reach = 600.0;     /* mm  */
 const int Traj_Points = 50;
 
 /* Trajectory modes */
-#define MODE_TOP_DOWN   1
+#define MODE_TOP_DOWN   1 
 #define MODE_SIDE_SWIPE 2
-#define STEP_DELAY_MS  15   /* dwell per micro-step so servos physically settle */
+#define STEP_DELAY_MS  5   /* dwell per micro-step so servos physically settle */
 
 /***************************************************************************************** 
                                 Trajectory Functions
@@ -110,11 +110,11 @@ float Move_Trajectory(const double theta_init[4], const double path[3][50], int 
 
         /* command the arm to the solved pose — point to point */
         Move_Arm_Pose(th_out);
-        ArmYA_Lock();   /* Locking function just in case */
+        //ArmYA_Lock();   /* Locking function just in case */
 
         /* Align Hand with XY Plane or 90 Degrees */
         Hand_Align(th_out, (uint8_t)traj_mode, &WristRA[0], &WristPA[0]);
-        WristRA_Lock(); /* Locking function just in case */
+        //WristRA_Lock(); /* Locking function just in case */
 
         /* dwell so the servos reach the pose before the next step */
         vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
