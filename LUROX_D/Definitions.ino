@@ -11,21 +11,21 @@
 /***************************************************************************************** 
                               Libraries and Library Pointers
 ******************************************************************************************/
-#include <SPI.h>                    //Serial Peripheral Interface for K210
-#include <math.h>                   //Mathmatics Library
-#include <string.h>                 //Converting strings from UART
-#include <HardwareSerial.h>         //Open Serial Ports
-#include <Wire.h>                   //i2C Initalization for ESP32-S3
-#include "freertos/FreeRTOS.h"      //FreeRTOS OTA
-#include "freertos/task.h"          //FreeRTOS Task
-#include "freertos/event_groups.h"  //FreeRTOS Event Groups
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-#include <VL53L0X.h>                //VL53L0X Distance Sensor
-#include <ESP32Servo.h>             //ESP32-S3 ISR Servo Manager
-#include <float.h>
+#include <SPI.h>                    // Serial Peripheral Interface for K210
+#include <math.h>                   // Mathmatics Library
+#include <string.h>                 // Converting strings from UART
+#include <HardwareSerial.h>         // Open Serial Ports
+#include <Wire.h>                   // i2C Initalization for ESP32-S3
+#include "freertos/FreeRTOS.h"      // FreeRTOS OTA
+#include "freertos/task.h"          // FreeRTOS Task
+#include "freertos/event_groups.h"  // FreeRTOS Event Groups
+#include <BLEDevice.h>              //
+#include <BLEServer.h>              //
+#include <BLEUtils.h>               //
+#include <BLE2902.h>                //
+#include <VL53L0X.h>                // VL53L0X Distance Sensor
+#include <ESP32Servo.h>             // ESP32-S3 Servo 3.2.1
+#include <float.h>                  //
 
 /* Pointers for Libraries */
 BLEServer *pServer = NULL;
@@ -65,7 +65,7 @@ TaskHandle_t MiddleMot;   //Middle Servo Control
 TaskHandle_t RingMot;     //Ring Servo Control
 TaskHandle_t PinkyMot;    //Pinky Servo Control
 
-TaskHandle_t Feedback;           //i2C Sensor Feedback & Management
+TaskHandle_t Feedback;    //i2C Sensor Feedback & Management
 
 /***************************************************************************************** 
                                       Definitions
@@ -97,10 +97,6 @@ const uint16_t SYSP = 475;   //Microsecond Pulse Width for Shoulder Yaw Steps
 #define FR_STEP 2     //Forearm Roll Step Pin
 #define FR_EN 42      //Forearm Roll Enable Pin
 const uint16_t FRSP = 475;  //Microsecond Pulse Width for Forearm Roll Steps
-
-/* Communication Sepecifications */
-#define RX_PIN 10
-#define TX_PIN 11
 
 #define STATE_WAITING_LAYER        0
 #define STATE_READING_LAYER1       1
@@ -250,11 +246,4 @@ typedef enum {
   HALT = 9,
 } Node;
 
-
-/***************************************************************************************** 
-                                   Key Point Definitions
-******************************************************************************************/
-
-const int16_t Arm_Home[3] = {-150, 300, -100}; /* General Home Position */
-const int16_t Arm_Extended[3] = {0, 300, -325}; /* Arm Extended out */
 

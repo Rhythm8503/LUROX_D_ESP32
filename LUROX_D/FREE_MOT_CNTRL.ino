@@ -58,7 +58,7 @@ void ARMPA_Mot(void* pvParameters) {
   Serial.println("Arm Pitch Task Handle Opened");
   #endif
 
-  int ARMPA_Offset = -15; /* 120 is the actual value for neutral */
+  uint8_t ARMPA_Offset = -15; /* 120 is the actual value for neutral */
 
   while (1) {
     if (ArmPA[0] != ArmPA[1]) {  // Shoulder Pitch
@@ -101,7 +101,7 @@ void ARMRA_Mot(void* pvParameters) {
   Serial.println("Arm Roll Task Handle Opened");
   #endif
 
-  int ARMRA_Offset = 15; /* 135 needs + 15 to make 150 */
+  uint8_t ARMRA_Offset = 15; /* 135 needs + 15 to make 150 */
 
   while (1) {
     if (ArmRA[0] != ArmRA[1]) {  // Shoulder Roll
@@ -145,7 +145,7 @@ void ELPA_Mot(void* pvParameters) {
   Serial.println("Elbow Pitch Task Handle Opened");
   #endif
 
-  int ELPA_Offset = -27; /* Angle 108 is the true neutral */
+  uint8_t ELPA_Offset = -27; /* Angle 108 is the true neutral */
 
   while (1) {
     if (ElbowPA[0] != ElbowPA[1]) {  // Elbow Pitch
@@ -189,7 +189,7 @@ void WRPA_Mot(void* pvParameters) {
   Serial.println("Wrist Pitch Task Handle Opened");
   #endif
 
-  int WristPA_Offset = 0;
+  uint8_t WristPA_Offset = 0;
 
   while (1) {
     if (WristPA[0] != WristPA[1]) {  // Wrist Pitch
@@ -229,7 +229,7 @@ void WRRA_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
   #if DEBUGSYS
-  Serial.println("Wrist Roll Task Handle Opened");
+    Serial.println("Wrist Roll Task Handle Opened");
   #endif
   
   while (1) {
@@ -263,7 +263,6 @@ void WRRA_Mot(void* pvParameters) {
       xSemaphoreGive(motorSemaphore);
       WristRA[1] = WristRA[0]; 
       vTaskDelay(pdMS_TO_TICKS(200));
-      //digitalWrite(FR_EN, HIGH);
     }
   }
 }
@@ -276,9 +275,14 @@ void Thumb_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
   #if DEBUGSYS
-  Serial.println("Thumb Task Handle Opened");
+    Serial.println("Thumb Task Handle Opened");
   #endif
-  //HT.attach(THUMB, 500, 2500);
+
+  HT.attach(THUMB, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Thumb is attached to PWM");
+  #endif
 
   while (1) {
     if (ThumbRA[0] != ThumbRA[1]) {
@@ -289,30 +293,30 @@ void Thumb_Mot(void* pvParameters) {
       Serial.println("Thumb Active");
       #endif
 
-      HT.attach(THUMB, 500, 2500);
+      //HT.attach(THUMB, 500, 2500);
       HT.write(ThumbRA[0]);
       vTaskDelay(pdMS_TO_TICKS(40));
-      HT.detach();
+      //HT.detach();
       ThumbRA[1] = ThumbRA[0];
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
-    else {
-      if (Gestures[0] > 0) {
-      /* Pulse to Ensure Power */
-      xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
-      //Serial.println("Thumb Active Pulse");
+    // else {
+    //   if (Gestures[0] > 0) {
+    //   /* Pulse to Ensure Power */
+    //   xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+    //   //Serial.println("Thumb Active Pulse");
 
-      HT.attach(THUMB, 500, 2500);
-      HT.write(ThumbRA[1]);
-      vTaskDelay(pdMS_TO_TICKS(20));
-      HT.detach();
+    //   HT.attach(THUMB, 500, 2500);
+    //   HT.write(ThumbRA[1]);
+    //   vTaskDelay(pdMS_TO_TICKS(20));
+    //   HT.detach();
 
-      xSemaphoreGive(fingerSemaphore);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      }
-    }
+    //   xSemaphoreGive(fingerSemaphore);
+    //   vTaskDelay(pdMS_TO_TICKS(10));
+    //   }
+    // }
   }
 }
 
@@ -320,9 +324,13 @@ void Index_Mot(void* pvParameters) {
   int motorID = (int)pvParameters;
 
   #if DEBUGSYS
-  Serial.println("Index Task Handle Opened");
+    Serial.println("Index Task Handle Opened");
   #endif
-  //HI.attach(INDEX, 500, 2500);
+  HI.attach(INDEX, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Index Finger attached to PWM");
+  #endif
 
   while (1) {
   if (IndexRA[0] != IndexRA[1]) {
@@ -333,29 +341,29 @@ void Index_Mot(void* pvParameters) {
         Serial.println("Index Active");
       #endif
 
-      HI.attach(INDEX, 500, 2500);
+      //HI.attach(INDEX, 500, 2500);
       HI.write(IndexRA[0]);
       vTaskDelay(pdMS_TO_TICKS(40));
-      HI.detach();
+      //HI.detach();
       IndexRA[1] = IndexRA[0];
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
-    else {
-      if (Gestures[0] > 0) {
-      /* Pulse to ensure power */
-      xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+    // else {
+    //   if (Gestures[0] > 0) {
+    //   /* Pulse to ensure power */
+    //   xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
 
-      HI.attach(INDEX, 500, 2500);
-      HI.write(IndexRA[1]);
-      vTaskDelay(pdMS_TO_TICKS(20));
-      HI.detach();
+    //   HI.attach(INDEX, 500, 2500);
+    //   HI.write(IndexRA[1]);
+    //   vTaskDelay(pdMS_TO_TICKS(20));
+    //   HI.detach();
 
-      xSemaphoreGive(fingerSemaphore);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      }
-    }
+    //   xSemaphoreGive(fingerSemaphore);
+    //   vTaskDelay(pdMS_TO_TICKS(10));
+    //   }
+    // }
   }
 }
 
@@ -366,7 +374,11 @@ void Middle_Mot(void* pvParameters) {
    Serial.println("Middle Task Handle Opened");
   #endif
 
-  //HM.attach(MIDDLE, 500, 2500);
+  HM.attach(MIDDLE, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Middle Finger attached to PWM");
+  #endif
 
   while (1) {
   if (MiddleRA[0] != MiddleRA[1]) {
@@ -377,30 +389,30 @@ void Middle_Mot(void* pvParameters) {
       Serial.println("Middle Active");
       #endif
 
-      HM.attach(MIDDLE, 500, 2500);
+      //HM.attach(MIDDLE, 500, 2500);
       HM.write(MiddleRA[0]);
       vTaskDelay(pdMS_TO_TICKS(60));
-      HM.detach();
+      //HM.detach();
       MiddleRA[1] = MiddleRA[0];
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
-    else {
-      if (Gestures[0] > 0) {
-      /* Pulse to ensure power */
-      xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
-      //Serial.println("Middle Active Pulse");
+    // else {
+    //   if (Gestures[0] > 0) {
+    //   /* Pulse to ensure power */
+    //   xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+    //   //Serial.println("Middle Active Pulse");
 
-      HM.attach(MIDDLE, 500, 2500);
-      HM.write(MiddleRA[1]);
-      vTaskDelay(pdMS_TO_TICKS(20));
-      HM.detach();
+    //   HM.attach(MIDDLE, 500, 2500);
+    //   HM.write(MiddleRA[1]);
+    //   vTaskDelay(pdMS_TO_TICKS(20));
+    //   HM.detach();
 
-      xSemaphoreGive(fingerSemaphore);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      }
-    }
+    //   xSemaphoreGive(fingerSemaphore);
+    //   vTaskDelay(pdMS_TO_TICKS(10));
+    //   }
+    // }
   }
 }
 
@@ -410,7 +422,12 @@ void Ring_Mot(void* pvParameters) {
   #if DEBUGSYS
   Serial.println("Ring Task Handle Opened");
   #endif
-  //HR.attach(RING, 500, 2500);
+  
+  HR.attach(RING, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Ring Finger attached to PWM");
+  #endif
 
   while (1) {
   if (RingRA[0] != RingRA[1]) {
@@ -421,30 +438,30 @@ void Ring_Mot(void* pvParameters) {
       Serial.println("Ring Active");
       #endif
 
-      HR.attach(RING, 500, 2500);
+      //HR.attach(RING, 500, 2500);
       HR.write(RingRA[0]);
       vTaskDelay(pdMS_TO_TICKS(40));
-      HR.detach();
+      //HR.detach();
       RingRA[1] = RingRA[0];
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
-    else {
-      if (Gestures[0] > 0) {
-      /* Pulse to ensure Power */
-      xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
-      //Serial.println("Ring Active");
+    // else {
+    //   if (Gestures[0] > 0) {
+    //   /* Pulse to ensure Power */
+    //   xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+    //   //Serial.println("Ring Active");
 
-      HR.attach(RING, 500, 2500);
-      HR.write(RingRA[1]);
-      vTaskDelay(pdMS_TO_TICKS(20));
-      HR.detach();
+    //   HR.attach(RING, 500, 2500);
+    //   HR.write(RingRA[1]);
+    //   vTaskDelay(pdMS_TO_TICKS(20));
+    //   HR.detach();
 
-      xSemaphoreGive(fingerSemaphore);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      }
-    }
+    //   xSemaphoreGive(fingerSemaphore);
+    //   vTaskDelay(pdMS_TO_TICKS(10));
+    //   }
+    // }
   }
 }
 
@@ -455,7 +472,11 @@ void Pinky_Mot(void* pvParameters) {
   Serial.println("Pinky Task Handle Opened");
   #endif
 
- // HP.attach(PINKY, 500, 2500);
+  HP.attach(PINKY, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Pinky Finger attached to PWM");
+  #endif
 
   while (1) {
     if (PinkyRA[0] != PinkyRA[1]) {
@@ -466,30 +487,30 @@ void Pinky_Mot(void* pvParameters) {
       Serial.println("Pinky Active");
       #endif
 
-      HP.attach(PINKY, 500, 2500);
+      //HP.attach(PINKY, 500, 2500);
       HP.write(PinkyRA[0]);
       vTaskDelay(pdMS_TO_TICKS(50));
-      HP.detach();
+      //HP.detach();
       PinkyRA[1] = PinkyRA[0];
 
       xSemaphoreGive(fingerSemaphore);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
-    else {
-      if (Gestures[0] > 0) {
-      /* Pulse to ensure power */
-      xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
-      //Serial.println("Pinky Active");
+    // else {
+    //   if (Gestures[0] > 0) {
+    //   /* Pulse to ensure power */
+    //   xSemaphoreTake(fingerSemaphore, portMAX_DELAY);
+    //   //Serial.println("Pinky Active");
 
-      HP.attach(PINKY, 500, 2500);
-      HP.write(PinkyRA[1]);
-      vTaskDelay(pdMS_TO_TICKS(20)); /* 20ms equates to 1 50Hz bleep */
-      HP.detach();
+    //   HP.attach(PINKY, 500, 2500);
+    //   HP.write(PinkyRA[1]);
+    //   vTaskDelay(pdMS_TO_TICKS(20)); /* 20ms equates to 1 50Hz bleep */
+    //   HP.detach();
 
-      xSemaphoreGive(fingerSemaphore);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      }
-    }
+    //   xSemaphoreGive(fingerSemaphore);
+    //   vTaskDelay(pdMS_TO_TICKS(10));
+    //   }
+    // }
   }
 }
 

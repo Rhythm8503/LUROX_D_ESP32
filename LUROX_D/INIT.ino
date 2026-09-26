@@ -28,6 +28,9 @@ void FreeRTOS_Initalization() {
   motorSemaphore = xSemaphoreCreateCounting(MAX_CONCURRENT_MOTORS, MAX_CONCURRENT_MOTORS);
   fingerSemaphore = xSemaphoreCreateCounting(MAX_FINGERCONCURRENT_MOTORS, MAX_FINGERCONCURRENT_MOTORS);
 
+  #if DEBUGSYS
+    Serial.println("Semaphores created for tasks");
+  #endif
 
   xTaskCreatePinnedToCore(ARMYA_Mot, "Shoulder Yaw", 8192, NULL, 0, &ArmYAMot, 1);
   xTaskCreatePinnedToCore(ARMPA_Mot, "Shoulder Pitch", 8192, NULL, 0, &ArmPAMot, 1);
@@ -44,7 +47,7 @@ void FreeRTOS_Initalization() {
   xTaskCreatePinnedToCore(Embedded_Comm, "Comms & Sensor Collection", 16384, NULL, 1, &Feedback, 0);
   
   #if DEBUGSYS
-  Serial.println("FreeRTOS Tasks have been Handled");
+    Serial.println("FreeRTOS Tasks have been Handled");
   #endif
 }
 
@@ -97,7 +100,7 @@ void Motor_Initalization() {
   SHP.setPeriodHertz(50);  // Standard 50hz servo (Shoulder Pitch)
 
   #if DEBUGSYS
-  Serial.println("Servo set to 50Hz");
+    Serial.println("Servo set to 50Hz");
   #endif
 
   /* Attaching Servo to Pin */
@@ -107,7 +110,7 @@ void Motor_Initalization() {
   SHP.attach(SHR_PI, 500, 2500);
 
   #if DEBUGSYS
-  Serial.println("Attached Position Servos to Pins");
+    Serial.println("Attached Position Servos to Pins");
   #endif
 
   /* Stepper Motor Pinout */
@@ -117,7 +120,7 @@ void Motor_Initalization() {
   digitalWrite(SHY_EN, LOW);
 
   #if DEBUGSYS
-  Serial.println("Shoulder Stepper Initalized");
+    Serial.println("Shoulder Stepper Initalized");
   #endif
 
   pinMode(FR_DIR, OUTPUT);
@@ -156,6 +159,9 @@ void Bluetooth_Initialization() {
   pService->start();
   pServer->getAdvertising()->start();
   startTime = millis();
+  #if DEBUGSYS
+    Serial.println("Bluetooth broadcasting");
+  #endif
 }
 
 /***************************************************************************************** 
@@ -166,7 +172,7 @@ void Stepper_Home() {
 
   /* This function has been removed for MK2 and will be back MK3 */
   #if DEBUGSYS
-  Serial.println("Homing SHY Motor");
+    Serial.println("Homing SHY Motor");
   #endif
 
   /* Initial force to overcome Static Friction */
@@ -178,7 +184,7 @@ void Stepper_Home() {
   }
 
   #if DEBUGSYS
-  Serial.println("Homing FR Motor");
+    Serial.println("Homing FR Motor");
   #endif
 
   /* Initial force to overcome Static Friction */
@@ -207,15 +213,22 @@ void UART_Test() {
     receivedData.trim(); // Remove any leading/trailing whitespace
 
     if (receivedData == "K210 ALIVE") {
-      Serial.println("UART Communication Successful");
+      #if DEBUGSYS
+        Serial.println("UART Communication Successful");
+      #endif
       K210_Test = false; // Exit the loop after successful test
     } else {
-      Serial.println("Unexpected Data Received: " + receivedData);
+      #if DEBUGSYS
+        Serial.println("Unexpected Data Received: " + receivedData);
+      #endif
       K210_Test = false; // Exit the loop if unexpected data is received
     }
   
   if (TimeoutCounter > 1024) { // Timeout after 16384 iterations
-      Serial.println("UART Communication Failed: No Response from K210");
+      #if DEBUGSYS
+        Serial.println("UART Communication Failed: No Response from K210");
+      #endif
+
       K210_Test = false; // Exit the loop after timeout
     }
   }

@@ -235,7 +235,13 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
         #endif
       }
 
-      if (HandInv_Timeout > 50 && Attempt == false) {
+      if (HandInv_Timeout > 4) {
+        /* Gonna try twice this movement to search for the object */
+        ObjFound_Update = false;
+        Search_Alignment(); /* Moving hand to try finding the object! */
+      }
+
+      if (HandInv_Timeout > 5 && Attempt == false) {
         /* The object was found previously, try searching again and seeing if it can be aligned */
         ObjFound = false;
         Attempt = true;  
@@ -248,12 +254,12 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
         break;
       }
 
-      if (HandInv_Timeout > 50 && Attempt == true) {
+      if (HandInv_Timeout > 5 && Attempt == true) {
         ObjFound = false;
         CMD_END();
 
         #if DEBUGSYS
-          //Serial.println("Timeout Alignment, gave up!");
+          Serial.println("Timeout Alignment, gave up!");
         #endif
         break;
       }
@@ -304,13 +310,14 @@ void Action_Function(int int_input, int spec_action, int obj_action) {
     Serial.println("==========================");
     
     Run_Trajectory(Obj_Pos, MODE_TOP_DOWN);
-    vTaskDelay(pdMS_TO_TICKS(10000));                                   /* Hold and Wait */
+    vTaskDelay(pdMS_TO_TICKS(5000));                                    /* Hold and Wait */
 
                                                                         /* Based on Intention with Object */
     if (int_input == 3) Push_Obj(Obj_Pos);
     else if (int_input == 4) Pull_Obj(Obj_Pos);
     else Extended_Position();                                           /* Bring to Home */
 
+    vTaskDelay(pdMS_TO_TICKS(1000));                                    /* Delay for System */
     CMD_END();                                                          /* End Function, Objective Achieved */
     }
   }

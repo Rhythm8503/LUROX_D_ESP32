@@ -15,7 +15,7 @@
                                   Mapped Motor Functions
 ******************************************************************************************/
 
-void Search_Position(uint8_t Section) { // Hunting for Object
+void Search_Position(uint8_t Section) { /* Hunting for Object */
   #if DEBUGSYS
     Serial.println("Searching for Object!");
   #endif
@@ -23,7 +23,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
   /* Sweeping Search Mode */
   /* First Position Sweep */
   if (Section == 0) {
-    /* Force Move to Position [0, 277, -375.7] */
+    /* Force Move to Position [0, 326, -323] */
     ArmPA[0] = 160;     //Shoulder Pitch
     ArmRA[0] = 135;     //Shoulder Roll
     ArmYA[0] = 135;     //Shoulder Yaw
@@ -52,7 +52,7 @@ void Search_Position(uint8_t Section) { // Hunting for Object
 
   /* Pushing Trajectory Sweep 1 - 2 */
   else if (Section == 1 || Section == 2) {
-    double Traj[3] = {0, (277 + (Section * 50)), -375};
+    double Traj[3] = {0, (326 + (Section * 25)), -323};
     Run_Trajectory(Traj, 1);
 
     for (int Sw = 0; Sw <= 5; Sw++) {
@@ -105,6 +105,41 @@ void Search_Position(uint8_t Section) { // Hunting for Object
     WristRA_Lock();
     vTaskDelay(pdMS_TO_TICKS(4000)); /* Pause for OV5640 Lock On*/
   }
+}
+
+void Search_Alignment() {               /* Wrist is searching for object */
+  #if DEBUGSYS
+    Serial.println("Trying to Align!");
+  #endif
+
+  uint8_t RA_Hold = WristRA[1];
+  uint8_t PA_Hold = WristPA[1];
+
+  /* Add 6 Degrees */
+  WristRA[0] = WristRA[1] + 6; 
+  WristPA[0] = WristPA[1] + 6;
+  WristRA_Lock();
+  vTaskDelay(pdMS_TO_TICKS(1000));  /* Starting position! */
+
+  /* Random Sweep */
+  if ((objX[0] == objX[1]) && (objY[0] == objY[1])) {
+    for (int y = 1; y < 4; y++) {
+      if (ACT_Break == true) break; 
+      if (ObjFound_Update) break; 
+      WristPA[0] = WristPA[1] - (y * 4);
+
+      for (int x = 0; x < 3; x++) {
+        if (ACT_Break == true) break; 
+        if (ObjFound_Update) break; 
+        WristRA[0] = WristRA[1] - (x * 4);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+      }
+    }
+  }
+  vTaskDelay(pdMS_TO_TICKS(500));
+  WristRA[0] = RA_Hold; 
+  WristPA[0] = PA_Hold;
+  WristRA_Lock();
 }
 
 void Wrist_Wave() { /* Directly Utilize Wrist to Wave */

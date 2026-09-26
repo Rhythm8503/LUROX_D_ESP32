@@ -71,6 +71,7 @@ void K210_Handle() {
           if (b == 4) {                  // Layer 2 <CLOSE>
             if (CMD_PROC == true) {
               ObjFound = true;                /* Declare found */
+              ObjFound_Update = true;         /* Purpose track for Alignment */
             }
             state = STATE_WAITING_LAYER;  // Layer 2 complete, reset to Layer 1
           } else {
