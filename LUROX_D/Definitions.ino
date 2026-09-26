@@ -24,6 +24,7 @@
 #include <BLEUtils.h>               //
 #include <BLE2902.h>                //
 #include <VL53L0X.h>                // VL53L0X Distance Sensor
+#include <ESP32PWM.h>               // ESP32 PWM Library for MCPWM
 #include <ESP32Servo.h>             // ESP32-S3 Servo 3.2.1
 #include <float.h>                  //
 
@@ -105,7 +106,7 @@ const uint16_t FRSP = 475;  //Microsecond Pulse Width for Forearm Roll Steps
 
 /* Semaphore Definitions */
 #define MAX_CONCURRENT_MOTORS 5
-#define MAX_FINGERCONCURRENT_MOTORS 3
+#define MAX_FINGERCONCURRENT_MOTORS 2
 
 /* DEBUG & SETTINGS */
 #define DEBUGSYS true

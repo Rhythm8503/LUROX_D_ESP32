@@ -38,11 +38,11 @@ void FreeRTOS_Initalization() {
   xTaskCreatePinnedToCore(ELPA_Mot, "Elbow Pitch", 8192, NULL, 0, &ElbowPAMot, 1);
   xTaskCreatePinnedToCore(WRPA_Mot, "Wrist Pitch", 8192, NULL, 0, &WristPAMot, 1);
   xTaskCreatePinnedToCore(WRRA_Mot, "Wrist Roll", 8192, NULL, 0, &WristRAMot, 1);
-  xTaskCreatePinnedToCore(Thumb_Mot, "Thumb Motor", 4096, NULL, 0, &ArmPAMot, 1);
-  xTaskCreatePinnedToCore(Index_Mot, "Index Motor", 4096, NULL, 0, &ArmPAMot, 1);
-  xTaskCreatePinnedToCore(Middle_Mot, "Middle Motor", 4096, NULL, 0, &ArmPAMot, 1);
-  xTaskCreatePinnedToCore(Ring_Mot, "Ring Motor", 4096, NULL, 0, &ArmPAMot, 1);
-  xTaskCreatePinnedToCore(Pinky_Mot, "Pinky Motor", 4096, NULL, 0, &ArmPAMot, 1);
+  xTaskCreatePinnedToCore(Thumb_Mot, "Thumb Motor", 4096, NULL, 0, &ThumbMot, 1);
+  xTaskCreatePinnedToCore(Index_Mot, "Index Motor", 4096, NULL, 0, &IndexMot, 1);
+  xTaskCreatePinnedToCore(Middle_Mot, "Middle Motor", 4096, NULL, 0, &MiddleMot, 1);
+  xTaskCreatePinnedToCore(Ring_Mot, "Ring Motor", 4096, NULL, 0, &RingMot, 1);
+  xTaskCreatePinnedToCore(Pinky_Mot, "Pinky Motor", 4096, NULL, 0, &PinkyMot, 1);
   
   xTaskCreatePinnedToCore(Embedded_Comm, "Comms & Sensor Collection", 16384, NULL, 1, &Feedback, 0);
   
@@ -108,6 +108,21 @@ void Motor_Initalization() {
   EP.attach(ELBOW, 500, 2500);
   SHR.attach(SHR_RO, 500, 2500);
   SHP.attach(SHR_PI, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Arm Motors attached to ESP32-S3");
+  #endif
+
+  /* Attaching Finger Motors */
+  HT.attach(THUMB, 500, 2500);
+  HI.attach(INDEX, 500, 2500);
+  HM.attach(MIDDLE, 500, 2500);
+  HR.attach(RING, 500, 2500);
+  HP.attach(PINKY, 500, 2500);
+
+  #if DEBUGSYS
+    Serial.println("Finger Servos attached to ESP32-S3");
+  #endif
 
   #if DEBUGSYS
     Serial.println("Attached Position Servos to Pins");

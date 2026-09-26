@@ -14,9 +14,7 @@
 
 float HandSensor() { //P2 Vector
   //Read Stepper Motor Position/Revolutions
-  //FR_Pos = FRAS.getCumulativePosition();
   Obj_Dist = IRSen.readRangeContinuousMillimeters(); // Sensor Read
-  // Serial.println(Obj_Dist);
   return 1;
 }
 
