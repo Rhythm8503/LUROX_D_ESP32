@@ -170,13 +170,15 @@ void Wave_Movement() { // Pre-Defined Wave Animation
     WristPA[0] = 40; /* Tilt Up to Wave at People*/
 
     /* Wave Animation */
-    ArmYA[0] = 125;   // <--- Movement Triggered
-    Wrist_Wave();     // <- While YA moves, Wrist Moves
+    ArmYA[0] = 120;   // <--- Movement Triggered
     ArmYA_Lock();     // <-- ArmYA locking Wave_Movement till completion
+    vTaskDelay(pdMS_TO_TICKS(200));
+    Wrist_Wave();     // <- While YA moves, Wrist Moves
 
-    ArmYA[0] = 145;  
-    Wrist_Wave();
+    ArmYA[0] = 140; 
     ArmYA_Lock();
+    vTaskDelay(pdMS_TO_TICKS(200)); 
+    Wrist_Wave();
 
     ArmYA[0] = 135;   // Reset to Original Position
     ArmYA_Lock();
