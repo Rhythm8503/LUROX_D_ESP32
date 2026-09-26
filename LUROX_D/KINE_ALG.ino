@@ -409,7 +409,7 @@ uint8_t Hand_Align(double theta_deg[4], uint8_t mode, uint8_t* A5_out, uint8_t* 
     if (mode == MODE_SIDE_SWIPE) alpha += PI / 2.0;     /* 90 deg roll about forearm */
 
     double A5 = 135.0 + RAD_TO_DEG(alpha);
-    double A6 = 90.0 - RAD_TO_DEG(beta);
+    double A6 = 110.0 - RAD_TO_DEG(beta);
 
     *A5_out = (uint8_t)lround(constrain(A5, joint5Limits[0], joint5Limits[1]));
     *A6_out = (uint8_t)lround(constrain(A6, joint6Limits[0], joint6Limits[1]));
